@@ -19,14 +19,16 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
-    /*
-     * public static function example($getShared = true)
-     * {
-     *     if ($getShared) {
-     *         return static::getSharedInstance('example');
-     *     }
-     *
-     *     return new \CodeIgniter\Example();
-     * }
+    /**
+     * Override the model service to use our fixed UserIdentityModel
      */
+    public static function model(string $name = null, bool $getShared = true, ?string $conn = null)
+    {
+        // If requesting UserIdentityModel, return our fixed version
+        if ($name === 'CodeIgniter\Shield\Models\UserIdentityModel') {
+            $name = 'App\Models\UserIdentityModelFixed';
+        }
+        
+        return parent::model($name, $getShared, $conn);
+    }
 }

@@ -97,8 +97,26 @@
         </div>
         <div class="kanban-cards" data-status="<?= $status ?>">
             <?php foreach ($tasks as $task): ?>
-            <div class="kanban-card" data-task-id="<?= $task['id'] ?>">
+            <div class="kanban-card <?= $task['is_blocked'] ? 'border-danger' : '' ?>" data-task-id="<?= $task['id'] ?>" onclick="window.location='<?= base_url('tasks/view/' . $task['id']) ?>'">
+                <?php if ($task['is_blocked']): ?>
+                <div class="mb-2">
+                    <span class="badge bg-danger"><i class="bi bi-exclamation-triangle-fill"></i> BLOCKED</span>
+                </div>
+                <?php endif; ?>
                 <div class="kanban-card-title"><?= esc($task['title']) ?></div>
+                <?php if ($task['assigned_to']): ?>
+                <div class="mb-2">
+                    <small class="text-muted">
+                        <i class="bi bi-person"></i> <?= esc($task['assigned_username'] ?? 'Assigned') ?>
+                    </small>
+                </div>
+                <?php else: ?>
+                <div class="mb-2">
+                    <small class="text-warning">
+                        <i class="bi bi-person-x"></i> Unassigned
+                    </small>
+                </div>
+                <?php endif; ?>
                 <div class="kanban-card-meta">
                     <?php
                     $priorityColors = [
@@ -147,11 +165,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 const newStatus = evt.to.dataset.status;
                 const newPosition = evt.newIndex;
                 
+                const badge = evt.to.parentElement.querySelector('.badge');
+                const currentCount = parseInt(badge.textContent);
+                badge.textContent = currentCount + 1;
+                
+                const oldBadge = evt.from.parentElement.querySelector('.badge');
+                const oldCount = parseInt(oldBadge.textContent);
+                oldBadge.textContent = Math.max(0, oldCount - 1);
+                
                 try {
-                    const response = await fetch(`<?= base_url('api/tasks/') ?>${taskId}/status`, {
-                        method: 'POST',
+                    const response = await fetch(`<?= base_url('api/tasks/') ?>${taskId}`, {
+                        method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
                         },
                         body: JSON.stringify({
                             status: newStatus,
@@ -159,9 +186,22 @@ document.addEventListener('DOMContentLoaded', function() {
                         })
                     });
                     
+                    const data = await response.json();
+                    
                     if (!response.ok) {
-                        alert('Failed to update task status');
+                        if (response.status === 403) {
+                            alert('Permission denied: You cannot update this task');
+                        } else {
+                            alert(data.message || 'Failed to update task status');
+                        }
                         location.reload();
+                    } else {
+                        const notification = document.createElement('div');
+                        notification.className = 'alert alert-success position-fixed top-0 end-0 m-3';
+                        notification.style.zIndex = '9999';
+                        notification.textContent = 'Task status updated successfully';
+                        document.body.appendChild(notification);
+                        setTimeout(() => notification.remove(), 3000);
                     }
                 } catch (error) {
                     alert('Error: ' + error.message);

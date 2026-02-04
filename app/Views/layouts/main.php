@@ -214,18 +214,65 @@
                     <i class="bi bi-check2-square"></i> Tasks
                 </a>
             </li>
+            <li class="sidebar-nav-item">
+                <a href="<?= base_url('time/tracker') ?>" class="sidebar-nav-link <?= url_is('time*') ? 'active' : '' ?>">
+                    <i class="bi bi-stopwatch"></i> Time Tracker
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="<?= base_url('check-in') ?>" class="sidebar-nav-link <?= url_is('check-in*') ? 'active' : '' ?>">
+                    <i class="bi bi-calendar-check"></i> Daily Check-In
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="<?= base_url('notes') ?>" class="sidebar-nav-link <?= url_is('notes*') ? 'active' : '' ?>">
+                    <i class="bi bi-journal-text"></i> Notes
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="<?= base_url('alerts') ?>" class="sidebar-nav-link <?= url_is('alerts*') ? 'active' : '' ?>">
+                    <i class="bi bi-bell"></i> Alerts
+                </a>
+            </li>
+            
             <?php if (auth()->user()->inGroup('admin')): ?>
+            <!-- Admin Only Features -->
+            <li class="sidebar-nav-item mt-3">
+                <div class="px-3 py-2 text-uppercase text-muted" style="font-size: 0.75rem; letter-spacing: 0.05em;">
+                    Admin Tools
+                </div>
+            </li>
             <li class="sidebar-nav-item">
                 <a href="<?= base_url('clients') ?>" class="sidebar-nav-link <?= url_is('clients*') ? 'active' : '' ?>">
                     <i class="bi bi-people"></i> Clients
                 </a>
             </li>
-            <?php endif; ?>
             <li class="sidebar-nav-item">
-                <a href="<?= base_url('time') ?>" class="sidebar-nav-link <?= url_is('time*') ? 'active' : '' ?>">
-                    <i class="bi bi-clock"></i> Time Tracking
+                <a href="<?= base_url('developers') ?>" class="sidebar-nav-link <?= url_is('developers*') ? 'active' : '' ?>">
+                    <i class="bi bi-person-badge"></i> Developers
                 </a>
             </li>
+            <li class="sidebar-nav-item">
+                <a href="<?= base_url('performance') ?>" class="sidebar-nav-link <?= url_is('performance*') ? 'active' : '' ?>">
+                    <i class="bi bi-graph-up"></i> Performance
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="<?= base_url('profitability') ?>" class="sidebar-nav-link <?= url_is('profitability*') ? 'active' : '' ?>">
+                    <i class="bi bi-currency-dollar"></i> Profitability
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="<?= base_url('capacity') ?>" class="sidebar-nav-link <?= url_is('capacity*') ? 'active' : '' ?>">
+                    <i class="bi bi-bar-chart"></i> Capacity
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="<?= base_url('templates') ?>" class="sidebar-nav-link <?= url_is('templates*') ? 'active' : '' ?>">
+                    <i class="bi bi-file-earmark-text"></i> Templates
+                </a>
+            </li>
+            <?php endif; ?>
         </ul>
     </div>
 

@@ -49,11 +49,30 @@ class ProjectsController extends BaseController
         $projectUserModel = new ProjectUserModel();
         $assignedUsers = $projectUserModel->getProjectUsers($id);
         
+        $availableDevelopers = [];
+        if ($isAdmin) {
+            $db = \Config\Database::connect();
+            $assignedUserIds = array_column($assignedUsers, 'user_id');
+            
+            $builder = $db->table('users')
+                ->select('users.id, users.username, users.email')
+                ->join('auth_groups_users', 'auth_groups_users.user_id = users.id')
+                ->where('auth_groups_users.group', 'developer')
+                ->where('users.active', 1);
+            
+            if (!empty($assignedUserIds)) {
+                $builder->whereNotIn('users.id', $assignedUserIds);
+            }
+            
+            $availableDevelopers = $builder->get()->getResultArray();
+        }
+        
         $data = [
             'title' => $project['name'],
             'project' => $project,
             'health' => $health,
             'assigned_users' => $assignedUsers,
+            'available_developers' => $availableDevelopers,
             'isAdmin' => $isAdmin,
         ];
 

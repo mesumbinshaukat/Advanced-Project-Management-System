@@ -36,6 +36,64 @@ $routes->group('', ['filter' => 'session'], function($routes) {
     $routes->group('time', ['filter' => 'permission:time.log,time.view.all'], function($routes) {
         $routes->get('/', 'TimeEntriesController::index');
         $routes->get('create', 'TimeEntriesController::create');
+        $routes->get('tracker', 'TimeEntriesController::tracker');
+        $routes->post('store', 'TimeEntriesController::store');
+    });
+    
+    $routes->group('notes', ['filter' => 'permission:tasks.view.assigned,tasks.view.all'], function($routes) {
+        $routes->get('/', 'NotesController::index');
+        $routes->get('create', 'NotesController::create');
+        $routes->post('store', 'NotesController::store');
+        $routes->get('edit/(:num)', 'NotesController::edit/$1');
+        $routes->post('update/(:num)', 'NotesController::update/$1');
+        $routes->get('delete/(:num)', 'NotesController::delete/$1');
+    });
+    
+    $routes->group('messages', ['filter' => 'permission:projects.view.assigned,projects.view.all'], function($routes) {
+        $routes->get('(:num)', 'MessagesController::index/$1');
+        $routes->post('store', 'MessagesController::store');
+    });
+    
+    $routes->group('developers', ['filter' => 'role:admin'], function($routes) {
+        $routes->get('/', 'DevelopersController::index');
+        $routes->get('workload/(:num)', 'DevelopersController::workload/$1');
+    });
+    
+    $routes->group('check-in', function($routes) {
+        $routes->get('/', 'CheckInController::index');
+        $routes->post('store', 'CheckInController::store');
+        $routes->get('team', 'CheckInController::team', ['filter' => 'role:admin']);
+    });
+    
+    $routes->group('alerts', function($routes) {
+        $routes->get('/', 'AlertsController::index');
+        $routes->get('resolve/(:num)', 'AlertsController::resolve/$1');
+        $routes->get('generate', 'AlertsController::generate', ['filter' => 'role:admin']);
+    });
+    
+    $routes->group('templates', ['filter' => 'role:admin'], function($routes) {
+        $routes->get('/', 'TemplatesController::index');
+        $routes->get('create-project', 'TemplatesController::createProject');
+        $routes->post('store-project', 'TemplatesController::storeProject');
+        $routes->get('create-task', 'TemplatesController::createTask');
+        $routes->post('store-task', 'TemplatesController::storeTask');
+        $routes->get('use-project/(:num)', 'TemplatesController::useProjectTemplate/$1');
+        $routes->post('apply-project', 'TemplatesController::applyProjectTemplate');
+    });
+    
+    $routes->group('profitability', ['filter' => 'role:admin'], function($routes) {
+        $routes->get('/', 'ProfitabilityController::index');
+        $routes->get('project/(:num)', 'ProfitabilityController::project/$1');
+    });
+    
+    $routes->group('capacity', ['filter' => 'role:admin'], function($routes) {
+        $routes->get('/', 'CapacityController::index');
+    });
+    
+    $routes->group('performance', ['filter' => 'role:admin'], function($routes) {
+        $routes->get('/', 'PerformanceController::index');
+        $routes->get('developer/(:num)', 'PerformanceController::developer/$1');
+        $routes->get('update-all', 'PerformanceController::updateAll');
     });
     
     $routes->group('api', function($routes) {
@@ -66,12 +124,33 @@ $routes->group('', ['filter' => 'session'], function($routes) {
             $routes->delete('(:num)', 'Api\ClientsController::delete/$1');
         });
         
-        $routes->group('time', ['filter' => 'permission:time.log,time.view.all'], function($routes) {
+        $routes->group('time-entries', ['filter' => 'permission:time.log,time.view.all'], function($routes) {
             $routes->get('/', 'Api\TimeEntriesController::index');
             $routes->get('(:num)', 'Api\TimeEntriesController::show/$1');
             $routes->post('/', 'Api\TimeEntriesController::create', ['filter' => 'permission:time.log']);
             $routes->put('(:num)', 'Api\TimeEntriesController::update/$1');
             $routes->delete('(:num)', 'Api\TimeEntriesController::delete/$1');
+        });
+        
+        $routes->group('notes', ['filter' => 'permission:tasks.view.assigned,tasks.view.all'], function($routes) {
+            $routes->get('/', 'Api\NotesController::index');
+            $routes->post('/', 'Api\NotesController::create');
+            $routes->put('(:num)', 'Api\NotesController::update/$1');
+            $routes->delete('(:num)', 'Api\NotesController::delete/$1');
+            $routes->post('pin/(:num)', 'Api\NotesController::pin/$1');
+        });
+        
+        $routes->group('messages', ['filter' => 'permission:projects.view.assigned,projects.view.all'], function($routes) {
+            $routes->get('/', 'Api\MessagesController::index');
+            $routes->post('/', 'Api\MessagesController::create');
+            $routes->post('(:num)/read', 'Api\MessagesController::markRead/$1');
+            $routes->get('unread', 'Api\MessagesController::unreadCount');
+        });
+        
+        $routes->group('assignment', ['filter' => 'permission:projects.view.all'], function($routes) {
+            $routes->get('suggest', 'Api\AssignmentController::suggest');
+            $routes->get('workload', 'Api\AssignmentController::workload');
+            $routes->get('workload/(:num)', 'Api\AssignmentController::workload/$1');
         });
     });
 });

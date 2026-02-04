@@ -30,6 +30,16 @@ use CodeIgniter\Shield\Models\UserModel;
 class Auth extends ShieldAuth
 {
     /**
+     * Override to use our fixed UserIdentityModel
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        
+        // Replace the identities table model with our fixed version
+        $this->tables['identities'] = 'auth_identities';
+    }
+    /**
      * ////////////////////////////////////////////////////////////////////
      * AUTHENTICATION
      * ////////////////////////////////////////////////////////////////////
