@@ -1,0 +1,208 @@
+CRITICAL - 2026-02-04 12:53:19 --> ErrorException: file_get_contents(F:\Projects\Advanced Project Management System\app\Controllers/BaseController.php): Failed to open stream: No such file or directory
+[Method: CLI, Route: shield:setup]
+in VENDORPATH\codeigniter4\shield\src\Commands\Setup.php on line 229.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'file_get_contents(F:\\Projects\\Advanced Project Management System\\app\\Controllers/BaseController.php): Failed to open stream: No such file or directory', 'F:\\Projects\\Advanced Project Management System\\vendor\\codeigniter4\\shield\\src\\Commands\\Setup.php', 229)
+ 2 VENDORPATH\codeigniter4\shield\src\Commands\Setup.php(229): file_get_contents('F:\\Projects\\Advanced Project Management System\\app\\Controllers/BaseController.php')
+ 3 VENDORPATH\codeigniter4\shield\src\Commands\Setup.php(290): CodeIgniter\Shield\Commands\Setup->replace('Controllers/BaseController.php', [...])
+ 4 VENDORPATH\codeigniter4\shield\src\Commands\Setup.php(274): CodeIgniter\Shield\Commands\Setup->removeHelperLoadingInBaseController()
+ 5 VENDORPATH\codeigniter4\shield\src\Commands\Setup.php(91): CodeIgniter\Shield\Commands\Setup->setAutoloadHelpers()
+ 6 VENDORPATH\codeigniter4\shield\src\Commands\Setup.php(82): CodeIgniter\Shield\Commands\Setup->publishConfig()
+ 7 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Shield\Commands\Setup->run([])
+ 8 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('shield:setup', [])
+ 9 SYSTEMPATH\Boot.php(442): CodeIgniter\CLI\Console->run()
+10 SYSTEMPATH\Boot.php(166): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+11 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+ERROR - 2026-02-04 12:53:49 --> Table 'project_management_db.auth_permissions' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 300.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(300): mysqli->query('SELECT *
+FROM `auth_permissions`
+WHERE `name` = \'projects.create\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(769): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `auth_permissions`
+WHERE `name` = \'projects.create\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(686): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `auth_permissions`
+WHERE `name` = \'projects.create\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `auth_permissions`
+WHERE `name` = :name:', [...], false)
+ 5 APPPATH\Database\Seeds\RolesPermissionsSeeder.php(75): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\Database\Seeder.php(155): App\Database\Seeds\RolesPermissionsSeeder->run()
+ 7 SYSTEMPATH\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Seeds\\RolesPermissionsSeeder')
+ 8 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run([])
+ 9 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', [...])
+10 SYSTEMPATH\Boot.php(442): CodeIgniter\CLI\Console->run()
+11 SYSTEMPATH\Boot.php(166): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+12 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+CRITICAL - 2026-02-04 12:53:49 --> ErrorException: require(F:\Projects\Advanced Project Management System\app\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory
+[Method: CLI, Route: db:seed/RolesPermissionsSeeder]
+in SYSTEMPATH\CLI\BaseCommand.php on line 133.
+ 1 SYSTEMPATH\CLI\BaseCommand.php(133): CodeIgniter\Debug\Exceptions->errorHandler(2, 'require(F:\\Projects\\Advanced Project Management System\\app\\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory', 'F:\\Projects\\Advanced Project Management System\\vendor\\codeigniter4\\framework\\system\\CLI\\BaseCommand.php', 133)
+ 2 SYSTEMPATH\CLI\BaseCommand.php(133): require()
+ 3 SYSTEMPATH\Commands\Database\Seed.php(81): CodeIgniter\CLI\BaseCommand->showError(Object(CodeIgniter\Database\Exceptions\DatabaseException))
+ 4 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run([])
+ 5 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', [...])
+ 6 SYSTEMPATH\Boot.php(442): CodeIgniter\CLI\Console->run()
+ 7 SYSTEMPATH\Boot.php(166): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+ 8 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+ERROR - 2026-02-04 12:54:09 --> Table 'project_management_db.auth_groups' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 300.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(300): mysqli->query('SELECT *
+FROM `auth_groups`
+WHERE `alias` = \'admin\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(769): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `auth_groups`
+WHERE `alias` = \'admin\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(686): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `auth_groups`
+WHERE `alias` = \'admin\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `auth_groups`
+WHERE `alias` = :alias:', [...], false)
+ 5 APPPATH\Database\Seeds\RolesPermissionsSeeder.php(62): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\Database\Seeder.php(155): App\Database\Seeds\RolesPermissionsSeeder->run()
+ 7 SYSTEMPATH\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Seeds\\RolesPermissionsSeeder')
+ 8 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run([])
+ 9 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', [...])
+10 SYSTEMPATH\Boot.php(442): CodeIgniter\CLI\Console->run()
+11 SYSTEMPATH\Boot.php(166): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+12 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+CRITICAL - 2026-02-04 12:54:09 --> ErrorException: require(F:\Projects\Advanced Project Management System\app\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory
+[Method: CLI, Route: db:seed/RolesPermissionsSeeder]
+in SYSTEMPATH\CLI\BaseCommand.php on line 133.
+ 1 SYSTEMPATH\CLI\BaseCommand.php(133): CodeIgniter\Debug\Exceptions->errorHandler(2, 'require(F:\\Projects\\Advanced Project Management System\\app\\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory', 'F:\\Projects\\Advanced Project Management System\\vendor\\codeigniter4\\framework\\system\\CLI\\BaseCommand.php', 133)
+ 2 SYSTEMPATH\CLI\BaseCommand.php(133): require()
+ 3 SYSTEMPATH\Commands\Database\Seed.php(81): CodeIgniter\CLI\BaseCommand->showError(Object(CodeIgniter\Database\Exceptions\DatabaseException))
+ 4 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run([])
+ 5 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', [...])
+ 6 SYSTEMPATH\Boot.php(442): CodeIgniter\CLI\Console->run()
+ 7 SYSTEMPATH\Boot.php(166): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+ 8 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+ERROR - 2026-02-04 12:54:15 --> Table 'project_management_db.auth_groups' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 300.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(300): mysqli->query('SELECT *
+FROM `auth_groups`
+WHERE `alias` = \'admin\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(769): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `auth_groups`
+WHERE `alias` = \'admin\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(686): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `auth_groups`
+WHERE `alias` = \'admin\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `auth_groups`
+WHERE `alias` = :alias:', [...], false)
+ 5 APPPATH\Database\Seeds\RolesPermissionsSeeder.php(62): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\Database\Seeder.php(155): App\Database\Seeds\RolesPermissionsSeeder->run()
+ 7 SYSTEMPATH\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Seeds\\RolesPermissionsSeeder')
+ 8 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run([...])
+ 9 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', [...])
+10 SYSTEMPATH\Boot.php(442): CodeIgniter\CLI\Console->run()
+11 SYSTEMPATH\Boot.php(166): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+12 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+CRITICAL - 2026-02-04 12:54:15 --> ErrorException: require(F:\Projects\Advanced Project Management System\app\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory
+[Method: CLI, Route: db:seed/RolesPermissionsSeeder]
+in SYSTEMPATH\CLI\BaseCommand.php on line 133.
+ 1 SYSTEMPATH\CLI\BaseCommand.php(133): CodeIgniter\Debug\Exceptions->errorHandler(2, 'require(F:\\Projects\\Advanced Project Management System\\app\\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory', 'F:\\Projects\\Advanced Project Management System\\vendor\\codeigniter4\\framework\\system\\CLI\\BaseCommand.php', 133)
+ 2 SYSTEMPATH\CLI\BaseCommand.php(133): require()
+ 3 SYSTEMPATH\Commands\Database\Seed.php(81): CodeIgniter\CLI\BaseCommand->showError(Object(CodeIgniter\Database\Exceptions\DatabaseException))
+ 4 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run([...])
+ 5 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', [...])
+ 6 SYSTEMPATH\Boot.php(442): CodeIgniter\CLI\Console->run()
+ 7 SYSTEMPATH\Boot.php(166): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+ 8 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+CRITICAL - 2026-02-04 12:56:39 --> Error: Call to a member function getErrors() on null
+[Method: CLI, Route: shield:user/create]
+in VENDORPATH\codeigniter4\shield\src\Models\CheckQueryReturnTrait.php on line 44.
+ 1 VENDORPATH\codeigniter4\shield\src\Models\CheckQueryReturnTrait.php(31): CodeIgniter\Shield\Models\BaseModel->checkValidationError()
+ 2 VENDORPATH\codeigniter4\shield\src\Models\UserIdentityModel.php(92): CodeIgniter\Shield\Models\BaseModel->checkQueryReturn(1)
+ 3 VENDORPATH\codeigniter4\shield\src\Entities\User.php(147): CodeIgniter\Shield\Models\UserIdentityModel->createEmailIdentity(Object(CodeIgniter\Shield\Entities\User), [...])
+ 4 VENDORPATH\codeigniter4\shield\src\Entities\User.php(177): CodeIgniter\Shield\Entities\User->createEmailIdentity([...])
+ 5 VENDORPATH\codeigniter4\shield\src\Models\UserModel.php(358): CodeIgniter\Shield\Entities\User->saveEmailIdentity()
+ 6 SYSTEMPATH\BaseModel.php(1720): CodeIgniter\Shield\Models\UserModel->saveEmailIdentity([...])
+ 7 SYSTEMPATH\BaseModel.php(908): CodeIgniter\BaseModel->trigger('afterInsert', [...])
+ 8 SYSTEMPATH\Model.php(665): CodeIgniter\BaseModel->insert([...], false)
+ 9 VENDORPATH\codeigniter4\shield\src\Models\UserModel.php(265): CodeIgniter\Model->insert(Object(CodeIgniter\Shield\Entities\User), false)
+10 SYSTEMPATH\BaseModel.php(751): CodeIgniter\Shield\Models\UserModel->insert(Object(CodeIgniter\Shield\Entities\User), false)
+11 VENDORPATH\codeigniter4\shield\src\Models\UserModel.php(327): CodeIgniter\BaseModel->save(Object(CodeIgniter\Shield\Entities\User))
+12 VENDORPATH\codeigniter4\shield\src\Commands\User.php(302): CodeIgniter\Shield\Models\UserModel->save(Object(CodeIgniter\Shield\Entities\User))
+13 VENDORPATH\codeigniter4\shield\src\Commands\User.php(162): CodeIgniter\Shield\Commands\User->create('admin', 'admin@example.com')
+14 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Shield\Commands\User->run([...])
+15 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('shield:user', [...])
+16 SYSTEMPATH\Boot.php(442): CodeIgniter\CLI\Console->run()
+17 SYSTEMPATH\Boot.php(166): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+18 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+CRITICAL - 2026-02-04 12:59:21 --> CodeIgniter\Shield\Exceptions\SecurityException: Config\Security::$csrfProtection is set to 'cookie'. Same-site attackers may bypass the CSRF protection. Please set it to 'session'.
+[Method: GET, Route: /]
+in VENDORPATH\codeigniter4\shield\src\Authentication\Authenticators\Session.php on line 103.
+ 1 VENDORPATH\codeigniter4\shield\src\Authentication\Authenticators\Session.php(91): CodeIgniter\Shield\Authentication\Authenticators\Session->checkSecurityConfig()
+ 2 VENDORPATH\codeigniter4\shield\src\Authentication\Authentication.php(67): CodeIgniter\Shield\Authentication\Authenticators\Session->__construct(Object(CodeIgniter\Shield\Models\UserModel))
+ 3 VENDORPATH\codeigniter4\shield\src\Auth.php(188): CodeIgniter\Shield\Authentication\Authentication->factory('session')
+ 4 APPPATH\Controllers\Home.php(9): CodeIgniter\Shield\Auth->__call('loggedIn', [])
+ 5 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Home->index()
+ 6 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 7 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+11 SYSTEMPATH\rewrite.php(44): require_once('F:\\Projects\\Advanced Project Management System\\public\\index.php')
+DEBUG - 2026-02-04 12:59:50 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+CRITICAL - 2026-02-04 12:59:50 --> TypeError: App\Controllers\Home::index(): Return value must be of type string, CodeIgniter\HTTP\RedirectResponse returned
+[Method: GET, Route: /]
+in APPPATH\Controllers\Home.php on line 13.
+ 1 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Home->index()
+ 2 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+ 3 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ 7 SYSTEMPATH\rewrite.php(44): require_once('F:\\Projects\\Advanced Project Management System\\public\\index.php')
+DEBUG - 2026-02-04 13:00:10 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:00:28 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:00:29 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:01:54 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:01:54 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:04:03 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:04:03 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:04:06 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:05:00 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:05:13 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:05:14 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:07:53 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:08:03 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:08:03 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:08:16 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:08:17 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:10:12 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:10:31 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:10:31 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:13:21 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:13:21 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:13:21 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:14:21 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:14:21 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:14:21 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:15:56 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+CRITICAL - 2026-02-04 13:15:57 --> Error: Call to a member function getErrors() on null
+[Method: POST, Route: login]
+in VENDORPATH\codeigniter4\shield\src\Models\CheckQueryReturnTrait.php on line 44.
+ 1 VENDORPATH\codeigniter4\shield\src\Models\CheckQueryReturnTrait.php(31): CodeIgniter\Shield\Models\BaseModel->checkValidationError()
+ 2 VENDORPATH\codeigniter4\shield\src\Models\UserIdentityModel.php(555): CodeIgniter\Shield\Models\BaseModel->checkQueryReturn(true)
+ 3 SYSTEMPATH\BaseModel.php(749): CodeIgniter\Shield\Models\UserIdentityModel->update('1', Object(CodeIgniter\Shield\Entities\UserIdentity))
+ 4 VENDORPATH\codeigniter4\shield\src\Entities\User.php(202): CodeIgniter\BaseModel->save(Object(CodeIgniter\Shield\Entities\UserIdentity))
+ 5 VENDORPATH\codeigniter4\shield\src\Models\UserModel.php(302): CodeIgniter\Shield\Entities\User->saveEmailIdentity()
+ 6 SYSTEMPATH\BaseModel.php(749): CodeIgniter\Shield\Models\UserModel->update('1', Object(CodeIgniter\Shield\Entities\User))
+ 7 VENDORPATH\codeigniter4\shield\src\Models\UserModel.php(327): CodeIgniter\BaseModel->save(Object(CodeIgniter\Shield\Entities\User))
+ 8 VENDORPATH\codeigniter4\shield\src\Authentication\Authenticators\Session.php(360): CodeIgniter\Shield\Models\UserModel->save(Object(CodeIgniter\Shield\Entities\User))
+ 9 VENDORPATH\codeigniter4\shield\src\Authentication\Authenticators\Session.php(137): CodeIgniter\Shield\Authentication\Authenticators\Session->check([...])
+10 VENDORPATH\codeigniter4\shield\src\Controllers\LoginController.php(71): CodeIgniter\Shield\Authentication\Authenticators\Session->attempt([...])
+11 SYSTEMPATH\CodeIgniter.php(951): CodeIgniter\Shield\Controllers\LoginController->loginAction()
+12 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(CodeIgniter\Shield\Controllers\LoginController))
+13 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+14 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+15 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+16 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+17 SYSTEMPATH\rewrite.php(44): require_once('F:\\Projects\\Advanced Project Management System\\public\\index.php')
+DEBUG - 2026-02-04 13:16:29 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:16:29 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-02-04 13:16:30 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
