@@ -25,7 +25,7 @@ class MessageModel extends Model
     protected $deletedField = 'deleted_at';
     protected $validationRules = [
         'project_id' => 'required|integer',
-        'message' => 'required',
+        'message' => 'required|min_length[1]|max_length[5000]',
     ];
     protected $validationMessages = [];
     protected $skipValidation = false;
@@ -74,20 +74,39 @@ class MessageModel extends Model
         $threaded = [];
         $lookup = [];
 
-        foreach ($messages as $message) {
-            $message['replies'] = [];
-            $lookup[$message['id']] = &$message;
+        foreach ($messages as $key => $message) {
+            $messages[$key]['replies'] = [];
+            $lookup[$message['id']] = $key;
 
             if ($message['parent_id'] === null) {
-                $threaded[] = &$message;
+                $threaded[] = $key;
             } else {
                 if (isset($lookup[$message['parent_id']])) {
-                    $lookup[$message['parent_id']]['replies'][] = &$message;
+                    $parentKey = $lookup[$message['parent_id']];
+                    $messages[$parentKey]['replies'][] = $key;
                 }
             }
         }
 
-        return $threaded;
+        $result = [];
+        foreach ($threaded as $key) {
+            $result[] = $this->buildMessageTree($messages, $key);
+        }
+
+        return $result;
+    }
+
+    private function buildMessageTree($messages, $key)
+    {
+        $message = $messages[$key];
+        if (!empty($message['replies'])) {
+            $replies = [];
+            foreach ($message['replies'] as $replyKey) {
+                $replies[] = $this->buildMessageTree($messages, $replyKey);
+            }
+            $message['replies'] = $replies;
+        }
+        return $message;
     }
 
     public function markAsRead($messageId, $userId)

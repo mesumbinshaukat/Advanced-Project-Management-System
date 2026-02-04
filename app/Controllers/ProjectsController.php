@@ -55,10 +55,12 @@ class ProjectsController extends BaseController
             $assignedUserIds = array_column($assignedUsers, 'user_id');
             
             $builder = $db->table('users')
-                ->select('users.id, users.username, users.email')
+                ->select('users.id, users.username, auth_identities.secret as email')
                 ->join('auth_groups_users', 'auth_groups_users.user_id = users.id')
+                ->join('auth_identities', 'auth_identities.user_id = users.id', 'left')
                 ->where('auth_groups_users.group', 'developer')
-                ->where('users.active', 1);
+                ->where('users.active', 1)
+                ->where('auth_identities.type', 'email_password');
             
             if (!empty($assignedUserIds)) {
                 $builder->whereNotIn('users.id', $assignedUserIds);

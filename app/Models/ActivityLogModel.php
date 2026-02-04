@@ -27,10 +27,7 @@ class ActivityLogModel extends Model
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
 
-    protected array $casts = [
-        'old_values' => 'json',
-        'new_values' => 'json',
-    ];
+    protected array $casts = [];
     protected array $castHandlers = [];
 
     protected $useTimestamps = true;

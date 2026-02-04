@@ -251,7 +251,7 @@ async function removeUser(userId) {
     }
     
     try {
-        const response = await fetch('<?= base_url('api/projects/' . $project['id'] . '/users/' . userId) ?>', {
+        const response = await fetch(`<?= base_url('api/projects/' . $project['id'] . '/users/') ?>${userId}`, {
             method: 'DELETE',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'

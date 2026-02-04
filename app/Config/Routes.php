@@ -25,6 +25,7 @@ $routes->group('', ['filter' => 'session'], function($routes) {
         $routes->get('kanban/(:num)', 'TasksController::kanban/$1');
         $routes->get('create', 'TasksController::create', ['filter' => 'permission:tasks.create']);
         $routes->get('create/(:num)', 'TasksController::create/$1', ['filter' => 'permission:tasks.create']);
+        $routes->get('edit/(:num)', 'TasksController::edit/$1', ['filter' => 'permission:tasks.edit']);
     });
     
     $routes->group('clients', ['filter' => 'role:admin'], function($routes) {

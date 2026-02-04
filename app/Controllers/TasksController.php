@@ -83,4 +83,42 @@ class TasksController extends BaseController
 
         return view('tasks/create', $data);
     }
+
+    public function edit($id)
+    {
+        $user = auth()->user();
+        $isAdmin = $user->inGroup('admin');
+        
+        $taskModel = new TaskModel();
+        $task = $taskModel->find($id);
+        
+        if (!$task) {
+            return redirect()->to('/tasks')->with('error', 'Task not found');
+        }
+
+        // Check if user has access to this task
+        if (!$isAdmin && $task['assigned_to'] != $user->id) {
+            return redirect()->to('/tasks')->with('error', 'You do not have access to this task');
+        }
+
+        $projectModel = new ProjectModel();
+        $projects = $projectModel->getProjectsForUser($user->id, $isAdmin);
+        
+        // Get users for assignment dropdown
+        $db = \Config\Database::connect();
+        $users = $db->table('users')
+            ->select('users.id, users.username')
+            ->where('users.active', 1)
+            ->get()
+            ->getResultArray();
+        
+        $data = [
+            'title' => 'Edit Task',
+            'task' => $task,
+            'projects' => $projects,
+            'users' => $users,
+        ];
+
+        return view('tasks/edit', $data);
+    }
 }

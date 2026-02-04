@@ -76,9 +76,11 @@ class ProjectUserModel extends Model
 
     public function getProjectUsers($projectId)
     {
-        return $this->select('project_users.*, users.username, users.email')
+        return $this->select('project_users.*, users.username, auth_identities.secret as email')
             ->join('users', 'users.id = project_users.user_id')
+            ->join('auth_identities', 'auth_identities.user_id = users.id', 'left')
             ->where('project_id', $projectId)
+            ->where('auth_identities.type', 'email_password')
             ->findAll();
     }
 
