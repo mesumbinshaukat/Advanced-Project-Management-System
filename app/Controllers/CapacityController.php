@@ -23,6 +23,7 @@ class CapacityController extends BaseController
         $allocations = $this->capacityService->getProjectCapacityAllocation();
 
         return view('capacity/index', [
+            'title' => 'Capacity Planning',
             'forecast' => $forecast,
             'allocations' => $allocations,
         ]);

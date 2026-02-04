@@ -22,6 +22,7 @@ class PerformanceController extends BaseController
         $developers = $this->performanceService->getAllDevelopersPerformance();
 
         return view('performance/index', [
+            'title' => 'Performance Metrics',
             'developers' => $developers,
         ]);
     }
@@ -32,6 +33,7 @@ class PerformanceController extends BaseController
         $trend = $this->performanceService->getPerformanceTrend($userId, 6);
 
         return view('performance/developer', [
+            'title' => 'Developer Performance',
             'user_id' => $userId,
             'scores' => $scores,
             'trend' => $trend,

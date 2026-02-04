@@ -18,6 +18,7 @@ class DevelopersController extends BaseController
         $workloads = $this->assignmentService->getAllDevelopersWorkload();
 
         return view('developers/index', [
+            'title' => 'Developers',
             'developers' => $workloads,
         ]);
     }
@@ -34,6 +35,7 @@ class DevelopersController extends BaseController
         }
 
         return view('developers/workload', [
+            'title' => 'Developer Workload',
             'user' => $user,
             'workload' => $workload,
         ]);

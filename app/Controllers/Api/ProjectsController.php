@@ -59,6 +59,11 @@ class ProjectsController extends ResourceController
 
     public function create()
     {
+        // Only admins can create projects
+        if (!auth()->user()->inGroup('admin')) {
+            return $this->failForbidden('Only administrators can create projects');
+        }
+        
         $model = new ProjectModel();
         $data = $this->request->getJSON(true);
         
@@ -79,6 +84,11 @@ class ProjectsController extends ResourceController
 
     public function update($id = null)
     {
+        // Only admins can update projects
+        if (!auth()->user()->inGroup('admin')) {
+            return $this->failForbidden('Only administrators can update projects');
+        }
+        
         $model = new ProjectModel();
         $project = $model->find($id);
         
@@ -100,6 +110,11 @@ class ProjectsController extends ResourceController
 
     public function delete($id = null)
     {
+        // Only admins can delete projects
+        if (!auth()->user()->inGroup('admin')) {
+            return $this->failForbidden('Only administrators can delete projects');
+        }
+        
         $model = new ProjectModel();
         $project = $model->find($id);
         

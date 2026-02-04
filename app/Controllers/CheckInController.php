@@ -21,6 +21,7 @@ class CheckInController extends BaseController
         $streak = $this->checkInModel->getCheckInStreak($userId);
 
         return view('check_in/index', [
+            'title' => 'Daily Check-In',
             'today_check_in' => $todayCheckIn,
             'recent_check_ins' => $recentCheckIns,
             'streak' => $streak,
@@ -65,6 +66,7 @@ class CheckInController extends BaseController
         $teamCheckIns = $this->checkInModel->getTeamCheckIns($date);
 
         return view('check_in/team', [
+            'title' => 'Team Check-Ins',
             'check_ins' => $teamCheckIns,
             'date' => $date,
         ]);

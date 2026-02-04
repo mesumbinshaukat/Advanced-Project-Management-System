@@ -221,11 +221,16 @@ class AlertService
         }
     }
 
-    public function getActiveAlerts($limit = null)
+    public function getActiveAlerts($limit = null, $userId = null)
     {
         $builder = $this->alertModel
-            ->where('is_resolved', 0)
-            ->orderBy('severity', 'DESC')
+            ->where('is_resolved', 0);
+        
+        if ($userId) {
+            $builder->where('user_id', $userId);
+        }
+        
+        $builder->orderBy('severity', 'DESC')
             ->orderBy('created_at', 'DESC');
 
         if ($limit) {

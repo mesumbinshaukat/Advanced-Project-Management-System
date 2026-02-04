@@ -18,10 +18,20 @@ class MessagesController extends BaseController
 
     public function index($projectId)
     {
+        $user = auth()->user();
+        $isAdmin = $user->inGroup('admin');
+        
         $project = $this->projectModel->find($projectId);
 
         if (!$project) {
             return redirect()->back()->with('error', 'Project not found');
+        }
+
+        if (!$isAdmin) {
+            $projectUserModel = new \App\Models\ProjectUserModel();
+            if (!$projectUserModel->isUserAssignedToProject($projectId, $user->id)) {
+                return redirect()->to('/projects')->with('error', 'You do not have access to this project');
+            }
         }
 
         $taskId = $this->request->getGet('task_id');
@@ -29,6 +39,7 @@ class MessagesController extends BaseController
         $unreadCount = $this->messageModel->getUnreadCount($projectId, auth()->id());
 
         return view('messages/index', [
+            'title' => 'Messages - ' . $project['name'],
             'project' => $project,
             'messages' => $messages,
             'taskId' => $taskId,
@@ -40,6 +51,21 @@ class MessagesController extends BaseController
     {
         $data = $this->request->getPost();
         $data['user_id'] = auth()->id();
+        $data['message'] = trim($data['message'] ?? '');
+
+        if (empty($data['message'])) {
+            return redirect()->back()->withInput()->with('error', 'Message cannot be empty');
+        }
+
+        $user = auth()->user();
+        $isAdmin = $user->inGroup('admin');
+        
+        if (!$isAdmin) {
+            $projectUserModel = new \App\Models\ProjectUserModel();
+            if (!$projectUserModel->isUserAssignedToProject($data['project_id'], $user->id)) {
+                return redirect()->to('/projects')->with('error', 'You do not have access to this project');
+            }
+        }
 
         if (!$this->messageModel->insert($data)) {
             return redirect()->back()->withInput()->with('errors', $this->messageModel->errors());

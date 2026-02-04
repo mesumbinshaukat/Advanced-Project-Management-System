@@ -75,9 +75,18 @@ class TasksController extends BaseController
         $projectModel = new ProjectModel();
         $projects = $projectModel->getProjectsForUser($user->id, $isAdmin);
         
+        // Get users for assignment dropdown
+        $db = \Config\Database::connect();
+        $users = $db->table('users')
+            ->select('users.id, users.username')
+            ->where('users.active', 1)
+            ->get()
+            ->getResultArray();
+        
         $data = [
             'title' => 'Create Task',
             'projects' => $projects,
+            'users' => $users,
             'selected_project_id' => $projectId,
         ];
 

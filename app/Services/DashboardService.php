@@ -50,6 +50,7 @@ class DashboardService
                 ? round(($project['completed_tasks'] / $project['total_tasks']) * 100, 1) 
                 : 0;
             
+            // Calculate health status dynamically
             if ($project['blocked_tasks'] > 0 || $project['overdue_tasks'] > 2) {
                 $project['health_status'] = 'critical';
             } elseif ($project['overdue_tasks'] > 0 || $project['completion_rate'] < 30) {
@@ -57,8 +58,6 @@ class DashboardService
             } else {
                 $project['health_status'] = 'healthy';
             }
-
-            $this->projectModel->update($project['id'], ['health_status' => $project['health_status']]);
         }
 
         return $projects;
@@ -199,8 +198,9 @@ class DashboardService
             ->select('tasks.*, projects.name as project_name')
             ->join('projects', 'projects.id = tasks.project_id')
             ->where('tasks.assigned_to', $userId)
-            ->where('tasks.status !=', 'done')
+            ->whereIn('tasks.status', ['backlog', 'todo', 'in_progress', 'review'])
             ->where('tasks.deleted_at', null)
+            ->orderBy('tasks.status', 'ASC')
             ->orderBy('tasks.priority', 'DESC')
             ->orderBy('tasks.deadline', 'ASC')
             ->findAll();
@@ -210,21 +210,23 @@ class DashboardService
             ->join('project_users', 'project_users.project_id = projects.id')
             ->where('project_users.user_id', $userId)
             ->where('projects.deleted_at', null)
+            ->orderBy('projects.status', 'ASC')
             ->findAll();
 
         $recentActivity = $this->activityLogModel
             ->select('activity_logs.*, users.username')
             ->join('users', 'users.id = activity_logs.user_id')
-            ->join('tasks', 'tasks.id = activity_logs.entity_id AND activity_logs.entity_type = "task"', 'left')
-            ->where('tasks.assigned_to', $userId)
-            ->orWhere('activity_logs.user_id', $userId)
             ->orderBy('activity_logs.created_at', 'DESC')
             ->findAll(10);
+
+        $alertModel = new \App\Models\AlertModel();
+        $myAlerts = $alertModel->getUserAlerts($userId);
 
         return [
             'my_tasks' => $myTasks,
             'my_projects' => $myProjects,
             'recent_activity' => $recentActivity,
+            'my_alerts' => $myAlerts,
         ];
     }
 }

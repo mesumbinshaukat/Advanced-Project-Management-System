@@ -17,7 +17,7 @@ class TimeEntriesController extends BaseController
         $entries = $timeModel->getTimeEntriesForUser($user->id, $isAdmin);
         
         $data = [
-            'title' => 'Time Tracking',
+            'title' => 'Time Entries',
             'entries' => $entries,
             'isAdmin' => $isAdmin,
         ];
@@ -34,7 +34,7 @@ class TimeEntriesController extends BaseController
         $tasks = $taskModel->getTasksForUser($user->id, $isAdmin);
         
         $data = [
-            'title' => 'Log Time',
+            'title' => 'Log Time Entry',
             'tasks' => $tasks,
         ];
 
@@ -51,8 +51,10 @@ class TimeEntriesController extends BaseController
             ->select('tasks.*, projects.name as project_name')
             ->join('projects', 'projects.id = tasks.project_id')
             ->where('tasks.assigned_to', $userId)
-            ->whereIn('tasks.status', ['todo', 'in_progress', 'review'])
+            ->whereIn('tasks.status', ['backlog', 'todo', 'in_progress', 'review'])
             ->where('tasks.deleted_at', null)
+            ->orderBy('tasks.status', 'ASC')
+            ->orderBy('tasks.priority', 'DESC')
             ->findAll();
 
         $recentEntries = $timeModel

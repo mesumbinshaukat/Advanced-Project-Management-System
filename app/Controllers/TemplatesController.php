@@ -24,6 +24,7 @@ class TemplatesController extends BaseController
         $taskTemplates = $this->taskTemplateModel->getActiveTemplates();
 
         return view('templates/index', [
+            'title' => 'Templates',
             'project_templates' => $projectTemplates,
             'task_templates' => $taskTemplates,
         ]);
@@ -31,7 +32,9 @@ class TemplatesController extends BaseController
 
     public function createProject()
     {
-        return view('templates/create_project');
+        return view('templates/create_project', [
+            'title' => 'Create Project Template',
+        ]);
     }
 
     public function storeProject()
@@ -53,7 +56,9 @@ class TemplatesController extends BaseController
 
     public function createTask()
     {
-        return view('templates/create_task');
+        return view('templates/create_task', [
+            'title' => 'Create Task Template',
+        ]);
     }
 
     public function storeTask()
@@ -82,6 +87,7 @@ class TemplatesController extends BaseController
         }
 
         return view('templates/use_project', [
+            'title' => 'Use Project Template',
             'template' => $template,
         ]);
     }

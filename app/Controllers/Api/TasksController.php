@@ -67,8 +67,19 @@ class TasksController extends ResourceController
 
     public function create()
     {
+        $user = auth()->user();
+        $isAdmin = $user->inGroup('admin');
+        
         $model = new TaskModel();
         $data = $this->request->getJSON(true);
+        
+        // Check if developer has access to the project
+        if (!$isAdmin && isset($data['project_id'])) {
+            $projectUserModel = new ProjectUserModel();
+            if (!$projectUserModel->isUserAssignedToProject($data['project_id'], $user->id)) {
+                return $this->failForbidden('You do not have access to this project');
+            }
+        }
         
         $data['created_by'] = auth()->id();
         

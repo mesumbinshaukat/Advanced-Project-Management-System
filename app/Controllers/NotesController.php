@@ -21,6 +21,8 @@ class NotesController extends BaseController
 
     public function index()
     {
+        $user = auth()->user();
+        $isAdmin = $user->inGroup('admin');
         $projectId = $this->request->getGet('project_id');
         $taskId = $this->request->getGet('task_id');
 
@@ -33,10 +35,21 @@ class NotesController extends BaseController
             $context = $this->taskModel->find($taskId);
             $contextType = 'task';
         } else {
-            return redirect()->back()->with('error', 'Invalid context');
+            // Show all notes for the user
+            $notes = $this->noteModel
+                ->select('notes.*, projects.name as project_name, tasks.title as task_title, users.username')
+                ->join('users', 'users.id = notes.user_id')
+                ->join('projects', 'projects.id = notes.project_id', 'left')
+                ->join('tasks', 'tasks.id = notes.task_id', 'left')
+                ->where('notes.user_id', $user->id)
+                ->orderBy('notes.created_at', 'DESC')
+                ->findAll();
+            $context = null;
+            $contextType = 'all';
         }
 
         return view('notes/index', [
+            'title' => 'Notes',
             'notes' => $notes,
             'context' => $context,
             'contextType' => $contextType,
@@ -51,6 +64,7 @@ class NotesController extends BaseController
         $taskId = $this->request->getGet('task_id');
 
         return view('notes/create', [
+            'title' => 'Create Note',
             'projectId' => $projectId,
             'taskId' => $taskId,
         ]);
@@ -80,7 +94,10 @@ class NotesController extends BaseController
             return redirect()->back()->with('error', 'Note not found');
         }
 
-        return view('notes/edit', ['note' => $note]);
+        return view('notes/edit', [
+            'title' => 'Edit Note',
+            'note' => $note,
+        ]);
     }
 
     public function update($id)

@@ -10,14 +10,18 @@
                 <p class="text-muted">
                     <?php if ($contextType === 'project'): ?>
                     Project: <?= esc($context['name']) ?>
-                    <?php else: ?>
+                    <?php elseif ($contextType === 'task'): ?>
                     Task: <?= esc($context['title']) ?>
+                    <?php else: ?>
+                    All your notes across projects and tasks
                     <?php endif; ?>
                 </p>
             </div>
+            <?php if ($contextType !== 'all'): ?>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNoteModal">
                 <i class="bi bi-plus-lg"></i> Add Note
             </button>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -48,6 +52,15 @@
                             <i class="bi bi-<?= $typeIcons[$note['type']] ?>"></i>
                             <?= ucfirst($note['type']) ?>
                         </span>
+                        <?php if ($contextType === 'all'): ?>
+                        <span class="badge bg-light text-dark me-2">
+                            <?php if ($note['project_name']): ?>
+                            <i class="bi bi-folder"></i> <?= esc($note['project_name']) ?>
+                            <?php elseif ($note['task_title']): ?>
+                            <i class="bi bi-list-task"></i> <?= esc($note['task_title']) ?>
+                            <?php endif; ?>
+                        </span>
+                        <?php endif; ?>
                         <?php if ($note['title']): ?>
                         <strong><?= esc($note['title']) ?></strong>
                         <?php endif; ?>

@@ -24,6 +24,7 @@ class ProfitabilityController extends BaseController
         $topProjects = $this->profitabilityService->getTopProfitableProjects(10);
 
         return view('profitability/index', [
+            'title' => 'Profitability Analysis',
             'overall' => $overall,
             'trend' => $trend,
             'top_projects' => $topProjects,

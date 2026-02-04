@@ -173,6 +173,20 @@
     </div>
 </div>
 
+<?php if (!empty($my_alerts)): ?>
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-warning d-flex align-items-center" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <div class="flex-grow-1">
+                <strong><?= count($my_alerts) ?> Active Alert<?= count($my_alerts) > 1 ? 's' : '' ?></strong> require your attention
+            </div>
+            <a href="<?= base_url('alerts') ?>" class="btn btn-sm btn-outline-dark">View Alerts</a>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <div class="row mt-4">
     <div class="col-lg-8">
         <div class="card">

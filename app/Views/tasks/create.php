@@ -32,6 +32,18 @@
                         <textarea class="form-control" id="description" name="description" rows="4"></textarea>
                     </div>
 
+                    <div class="mb-3">
+                        <label for="assigned_to" class="form-label">Assign To</label>
+                        <select class="form-select" id="assigned_to" name="assigned_to">
+                            <option value="">Unassigned</option>
+                            <?php foreach ($users as $user): ?>
+                            <option value="<?= $user['id'] ?>">
+                                <?= esc($user['username']) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="status" class="form-label">Status</label>
@@ -93,6 +105,11 @@ document.getElementById('taskForm').addEventListener('submit', async (e) => {
     
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
+    
+    // Convert empty strings to null for optional fields
+    ['description', 'assigned_to', 'start_date', 'deadline', 'estimated_hours'].forEach(field => {
+        if (data[field] === '') data[field] = null;
+    });
     
     try {
         const response = await fetch('<?= base_url('api/tasks') ?>', {
