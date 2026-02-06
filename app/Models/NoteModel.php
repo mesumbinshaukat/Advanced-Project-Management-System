@@ -10,7 +10,7 @@ class NoteModel extends Model
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
     protected $returnType = 'array';
-    protected $useSoftDeletes = true;
+    protected $useSoftDeletes = false;
     protected $allowedFields = [
         'project_id',
         'task_id',
@@ -23,7 +23,6 @@ class NoteModel extends Model
     protected $useTimestamps = true;
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';
-    protected $deletedField = 'deleted_at';
     protected $validationRules = [
         'content' => 'required',
         'type' => 'required|in_list[note,decision,blocker,update]',

@@ -10,7 +10,7 @@ class TimeEntryModel extends Model
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
     protected $returnType = 'array';
-    protected $useSoftDeletes = true;
+    protected $useSoftDeletes = false;
     protected $protectFields = true;
     protected $allowedFields = [
         'task_id',
@@ -33,7 +33,6 @@ class TimeEntryModel extends Model
     protected $dateFormat = 'datetime';
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';
-    protected $deletedField = 'deleted_at';
 
     protected $validationRules = [
         'task_id' => 'required|is_natural_no_zero',

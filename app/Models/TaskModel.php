@@ -25,7 +25,9 @@ class TaskModel extends Model
         'deadline',
         'completed_at',
         'order_position',
-        'created_by'
+        'created_by',
+        'is_blocker',
+        'blocker_reason'
     ];
 
     protected bool $allowEmptyInserts = false;

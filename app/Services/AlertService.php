@@ -203,7 +203,7 @@ class AlertService
     protected function checkBlockers()
     {
         $blockedTasks = $this->taskModel
-            ->where('is_blocked', 1)
+            ->where('is_blocker', 1)
             ->where('deleted_at', null)
             ->findAll();
 

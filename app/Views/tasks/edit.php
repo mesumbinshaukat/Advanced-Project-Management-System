@@ -87,14 +87,14 @@
 
                     <div class="mb-3">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="is_blocked" name="is_blocked" value="1" <?= $task['is_blocked'] ? 'checked' : '' ?>>
-                            <label class="form-check-label" for="is_blocked">
+                            <input class="form-check-input" type="checkbox" id="is_blocker" name="is_blocker" value="1" <?= $task['is_blocker'] ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="is_blocker">
                                 Task is Blocked
                             </label>
                         </div>
                     </div>
 
-                    <div class="mb-3" id="blockerReasonDiv" style="display: <?= $task['is_blocked'] ? 'block' : 'none' ?>;">
+                    <div class="mb-3" id="blockerReasonDiv" style="display: <?= $task['is_blocker'] ? 'block' : 'none' ?>;">
                         <label for="blocker_reason" class="form-label">Blocker Reason</label>
                         <textarea class="form-control" id="blocker_reason" name="blocker_reason" rows="2"><?= esc($task['blocker_reason'] ?? '') ?></textarea>
                     </div>
@@ -116,7 +116,7 @@
 <?= $this->section('scripts') ?>
 <script>
 // Show/hide blocker reason field
-document.getElementById('is_blocked').addEventListener('change', function() {
+document.getElementById('is_blocker').addEventListener('change', function() {
     document.getElementById('blockerReasonDiv').style.display = this.checked ? 'block' : 'none';
 });
 
@@ -127,7 +127,7 @@ document.getElementById('taskForm').addEventListener('submit', async (e) => {
     const data = Object.fromEntries(formData.entries());
     
     // Handle checkbox
-    data.is_blocked = formData.get('is_blocked') ? 1 : 0;
+    data.is_blocker = formData.get('is_blocker') ? 1 : 0;
     
     // Convert empty strings to null for optional fields
     ['description', 'assigned_to', 'estimated_hours', 'start_date', 'due_date', 'blocker_reason'].forEach(field => {

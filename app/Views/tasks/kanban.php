@@ -97,8 +97,8 @@
         </div>
         <div class="kanban-cards" data-status="<?= $status ?>">
             <?php foreach ($tasks as $task): ?>
-            <div class="kanban-card <?= $task['is_blocked'] ? 'border-danger' : '' ?>" data-task-id="<?= $task['id'] ?>" onclick="window.location='<?= base_url('tasks/view/' . $task['id']) ?>'">
-                <?php if ($task['is_blocked']): ?>
+            <div class="kanban-card <?= $task['is_blocker'] ? 'border-danger' : '' ?>" data-task-id="<?= $task['id'] ?>" onclick="window.location='<?= base_url('tasks/view/' . $task['id']) ?>'">
+                <?php if ($task['is_blocker']): ?>
                 <div class="mb-2">
                     <span class="badge bg-danger"><i class="bi bi-exclamation-triangle-fill"></i> BLOCKED</span>
                 </div>

@@ -39,7 +39,7 @@ class DashboardService
             ->select('projects.*, 
                 (SELECT COUNT(*) FROM tasks WHERE tasks.project_id = projects.id AND tasks.deleted_at IS NULL) as total_tasks,
                 (SELECT COUNT(*) FROM tasks WHERE tasks.project_id = projects.id AND tasks.status = "done" AND tasks.deleted_at IS NULL) as completed_tasks,
-                (SELECT COUNT(*) FROM tasks WHERE tasks.project_id = projects.id AND tasks.is_blocked = 1 AND tasks.deleted_at IS NULL) as blocked_tasks,
+                (SELECT COUNT(*) FROM tasks WHERE tasks.project_id = projects.id AND tasks.is_blocker = 1 AND tasks.deleted_at IS NULL) as blocked_tasks,
                 (SELECT COUNT(*) FROM tasks WHERE tasks.project_id = projects.id AND tasks.deadline < CURDATE() AND tasks.status != "done" AND tasks.deleted_at IS NULL) as overdue_tasks')
             ->where('projects.status !=', 'archived')
             ->where('projects.deleted_at', null)
@@ -70,7 +70,7 @@ class DashboardService
         $blockedTasks = $this->taskModel
             ->select('tasks.*, projects.name as project_name')
             ->join('projects', 'projects.id = tasks.project_id')
-            ->where('tasks.is_blocked', 1)
+            ->where('tasks.is_blocker', 1)
             ->where('tasks.deleted_at', null)
             ->findAll();
 

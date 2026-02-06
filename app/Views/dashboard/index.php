@@ -215,7 +215,7 @@
                             <tr>
                                 <td>
                                     <strong><?= esc($task['title']) ?></strong>
-                                    <?php if ($task['is_blocked'] ?? false): ?>
+                                    <?php if ($task['is_blocker'] ?? false): ?>
                                     <span class="badge bg-danger ms-2">Blocked</span>
                                     <?php endif; ?>
                                 </td>
