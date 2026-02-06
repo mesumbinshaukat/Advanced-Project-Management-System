@@ -41,6 +41,8 @@ $routes->group('', ['filter' => 'session'], function($routes) {
         $routes->post('store', 'TimeEntriesController::store');
     });
     
+    // MILESTONE 2+ FEATURES - Disabled for Milestone 1
+    /*
     $routes->group('notes', ['filter' => 'permission:tasks.view.assigned,tasks.view.all'], function($routes) {
         $routes->get('/', 'NotesController::index');
         $routes->get('create', 'NotesController::create');
@@ -96,6 +98,7 @@ $routes->group('', ['filter' => 'session'], function($routes) {
         $routes->get('developer/(:num)', 'PerformanceController::developer/$1');
         $routes->get('update-all', 'PerformanceController::updateAll');
     });
+    */
     
     $routes->group('api', function($routes) {
         $routes->group('projects', ['filter' => 'permission:projects.view.assigned,projects.view.all'], function($routes) {
@@ -133,6 +136,8 @@ $routes->group('', ['filter' => 'session'], function($routes) {
             $routes->delete('(:num)', 'Api\TimeEntriesController::delete/$1');
         });
         
+        // MILESTONE 2+ API FEATURES - Disabled for Milestone 1
+        /*
         $routes->group('notes', ['filter' => 'permission:tasks.view.assigned,tasks.view.all'], function($routes) {
             $routes->get('/', 'Api\NotesController::index');
             $routes->post('/', 'Api\NotesController::create');
@@ -153,5 +158,6 @@ $routes->group('', ['filter' => 'session'], function($routes) {
             $routes->get('workload', 'Api\AssignmentController::workload');
             $routes->get('workload/(:num)', 'Api\AssignmentController::workload/$1');
         });
+        */
     });
 });

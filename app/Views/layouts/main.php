@@ -219,21 +219,6 @@
                     <i class="bi bi-stopwatch"></i> Time Tracker
                 </a>
             </li>
-            <li class="sidebar-nav-item">
-                <a href="<?= base_url('check-in') ?>" class="sidebar-nav-link <?= url_is('check-in*') ? 'active' : '' ?>">
-                    <i class="bi bi-calendar-check"></i> Daily Check-In
-                </a>
-            </li>
-            <li class="sidebar-nav-item">
-                <a href="<?= base_url('notes') ?>" class="sidebar-nav-link <?= url_is('notes*') ? 'active' : '' ?>">
-                    <i class="bi bi-journal-text"></i> Notes
-                </a>
-            </li>
-            <li class="sidebar-nav-item">
-                <a href="<?= base_url('alerts') ?>" class="sidebar-nav-link <?= url_is('alerts*') ? 'active' : '' ?>">
-                    <i class="bi bi-bell"></i> Alerts
-                </a>
-            </li>
             
             <?php if (auth()->user()->inGroup('admin')): ?>
             <!-- Admin Only Features -->
@@ -247,6 +232,8 @@
                     <i class="bi bi-people"></i> Clients
                 </a>
             </li>
+            
+            <!-- MILESTONE 2+ FEATURES - Hidden for Milestone 1
             <li class="sidebar-nav-item">
                 <a href="<?= base_url('developers') ?>" class="sidebar-nav-link <?= url_is('developers*') ? 'active' : '' ?>">
                     <i class="bi bi-person-badge"></i> Developers
@@ -272,6 +259,7 @@
                     <i class="bi bi-file-earmark-text"></i> Templates
                 </a>
             </li>
+            -->
             <?php endif; ?>
         </ul>
     </div>
