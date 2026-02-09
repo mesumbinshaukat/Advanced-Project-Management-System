@@ -16,16 +16,16 @@ class MessageModel extends Model
         'task_id',
         'user_id',
         'parent_id',
-        'message',
+        'content',
         'is_read',
     ];
     protected $useTimestamps = true;
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';
-    protected $deletedField = 'deleted_at';
+    protected $deletedField = '';
     protected $validationRules = [
         'project_id' => 'required|integer',
-        'message' => 'required|min_length[1]|max_length[5000]',
+        'content' => 'required|min_length[1]|max_length[5000]',
     ];
     protected $validationMessages = [];
     protected $skipValidation = false;
@@ -37,15 +37,11 @@ class MessageModel extends Model
         $activityModel = new ActivityLogModel();
         
         if (isset($data['result']) && $data['result']) {
-            $activityModel->insert([
-                'user_id' => auth()->id() ?? 0,
-                'entity_type' => 'message',
-                'entity_id' => is_array($data['id']) ? $data['id'][0] : $data['id'],
-                'action' => 'created',
-                'description' => 'Posted message',
-                'ip_address' => service('request')->getIPAddress(),
-                'user_agent' => service('request')->getUserAgent()->getAgentString(),
-            ]);
+            $activityModel->logActivity(
+                'message',
+                is_array($data['id']) ? $data['id'][0] : $data['id'],
+                'create'
+            );
         }
 
         return $data;
@@ -53,47 +49,64 @@ class MessageModel extends Model
 
     public function getProjectMessages($projectId, $taskId = null)
     {
-        $builder = $this->select('messages.*, users.username')
-            ->join('users', 'users.id = messages.user_id')
-            ->where('messages.project_id', $projectId)
-            ->where('messages.deleted_at', null);
+        try {
+            $builder = $this->select('messages.*, users.username')
+                ->join('users', 'users.id = messages.user_id')
+                ->where('messages.project_id', $projectId);
 
-        if ($taskId) {
-            $builder->where('messages.task_id', $taskId);
-        } else {
-            $builder->where('messages.task_id', null);
+            if ($taskId) {
+                $builder->where('messages.task_id', $taskId);
+            } else {
+                $builder->where('messages.task_id', null);
+            }
+
+            return $builder->orderBy('messages.created_at', 'ASC')->findAll();
+        } catch (\Throwable $e) {
+            $errorFile = WRITEPATH . 'logs/error_debug.log';
+            $errorMsg = date('Y-m-d H:i:s') . ' - MessageModel::getProjectMessages - ' . get_class($e) . ': ' . $e->getMessage() . "\n";
+            $errorMsg .= "File: " . $e->getFile() . " Line: " . $e->getLine() . "\n";
+            $errorMsg .= "Trace:\n" . $e->getTraceAsString() . "\n\n";
+            file_put_contents($errorFile, $errorMsg, FILE_APPEND);
+            throw $e;
         }
-
-        return $builder->orderBy('messages.created_at', 'ASC')->findAll();
     }
 
     public function getThreadedMessages($projectId, $taskId = null)
     {
-        $messages = $this->getProjectMessages($projectId, $taskId);
+        try {
+            $messages = $this->getProjectMessages($projectId, $taskId);
         
-        $threaded = [];
-        $lookup = [];
+            $threaded = [];
+            $lookup = [];
 
-        foreach ($messages as $key => $message) {
-            $messages[$key]['replies'] = [];
-            $lookup[$message['id']] = $key;
+            foreach ($messages as $key => $message) {
+                $messages[$key]['replies'] = [];
+                $lookup[$message['id']] = $key;
 
-            if ($message['parent_id'] === null) {
-                $threaded[] = $key;
-            } else {
-                if (isset($lookup[$message['parent_id']])) {
-                    $parentKey = $lookup[$message['parent_id']];
-                    $messages[$parentKey]['replies'][] = $key;
+                if ($message['parent_id'] === null) {
+                    $threaded[] = $key;
+                } else {
+                    if (isset($lookup[$message['parent_id']])) {
+                        $parentKey = $lookup[$message['parent_id']];
+                        $messages[$parentKey]['replies'][] = $key;
+                    }
                 }
             }
-        }
 
-        $result = [];
-        foreach ($threaded as $key) {
-            $result[] = $this->buildMessageTree($messages, $key);
-        }
+            $result = [];
+            foreach ($threaded as $key) {
+                $result[] = $this->buildMessageTree($messages, $key);
+            }
 
-        return $result;
+            return $result;
+        } catch (\Throwable $e) {
+            $errorFile = WRITEPATH . 'logs/error_debug.log';
+            $errorMsg = date('Y-m-d H:i:s') . ' - MessageModel::getThreadedMessages - ' . get_class($e) . ': ' . $e->getMessage() . "\n";
+            $errorMsg .= "File: " . $e->getFile() . " Line: " . $e->getLine() . "\n";
+            $errorMsg .= "Trace:\n" . $e->getTraceAsString() . "\n\n";
+            file_put_contents($errorFile, $errorMsg, FILE_APPEND);
+            throw $e;
+        }
     }
 
     private function buildMessageTree($messages, $key)
@@ -119,7 +132,6 @@ class MessageModel extends Model
         return $this->where('project_id', $projectId)
             ->where('user_id !=', $userId)
             ->where('is_read', 0)
-            ->where('deleted_at', null)
             ->countAllResults();
     }
 }

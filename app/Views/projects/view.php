@@ -8,9 +8,11 @@
         <p class="text-muted mb-0"><?= esc($project['description'] ?? '') ?></p>
     </div>
     <div class="d-flex gap-2">
+        <!-- MILESTONE 2+ FEATURE - Hidden for Milestone 1
         <a href="<?= base_url('tasks/kanban/' . $project['id']) ?>" class="btn btn-primary">
             <i class="bi bi-kanban"></i> Kanban Board
         </a>
+        -->
         <?php if ($isAdmin): ?>
         <a href="<?= base_url('projects/edit/' . $project['id']) ?>" class="btn btn-outline-secondary">
             <i class="bi bi-pencil"></i> Edit
@@ -139,6 +141,7 @@
             </div>
         </div>
         
+        <!-- MILESTONE 2+ FEATURES - Hidden for Milestone 1
         <?php if ($isAdmin): ?>
         <div class="card mt-3">
             <div class="card-header">Quick Actions</div>
@@ -167,6 +170,7 @@
             </div>
         </div>
         <?php endif; ?>
+        -->
     </div>
 </div>
 

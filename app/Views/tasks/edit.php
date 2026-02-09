@@ -103,7 +103,10 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-check-lg"></i> Update Task
                         </button>
+                        <!-- MILESTONE 2+ FEATURE - Hidden for Milestone 1
                         <a href="<?= base_url('tasks/kanban/' . $task['project_id']) ?>" class="btn btn-outline-secondary">Cancel</a>
+                        -->
+                        <a href="<?= base_url('tasks') ?>" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </form>
             </div>

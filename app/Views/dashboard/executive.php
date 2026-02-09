@@ -125,7 +125,9 @@
                                 </td>
                                 <td>
                                     <a href="<?= base_url('projects/view/' . $project['id']) ?>" class="btn btn-sm btn-outline-primary">View</a>
+                                    <!-- MILESTONE 2+ FEATURE - Hidden for Milestone 1
                                     <a href="<?= base_url('tasks/kanban/' . $project['id']) ?>" class="btn btn-sm btn-outline-secondary">Kanban</a>
+                                    -->
                                 </td>
                             </tr>
                             <?php endforeach; ?>

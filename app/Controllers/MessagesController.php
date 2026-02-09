@@ -18,44 +18,56 @@ class MessagesController extends BaseController
 
     public function index($projectId)
     {
-        $user = auth()->user();
-        $isAdmin = $user->inGroup('admin');
-        
-        $project = $this->projectModel->find($projectId);
+        try {
+            $user = auth()->user();
+            $isAdmin = $user->inGroup('admin');
+            
+            $project = $this->projectModel->find($projectId);
 
-        if (!$project) {
-            return redirect()->back()->with('error', 'Project not found');
-        }
-
-        if (!$isAdmin) {
-            $projectUserModel = new \App\Models\ProjectUserModel();
-            if (!$projectUserModel->isUserAssignedToProject($projectId, $user->id)) {
-                return redirect()->to('/projects')->with('error', 'You do not have access to this project');
+            if (!$project) {
+                return redirect()->back()->with('error', 'Project not found');
             }
+
+            if (!$isAdmin) {
+                $projectUserModel = new \App\Models\ProjectUserModel();
+                if (!$projectUserModel->isUserAssignedToProject($projectId, $user->id)) {
+                    return redirect()->to('/projects')->with('error', 'You do not have access to this project');
+                }
+            }
+
+            $taskId = $this->request->getGet('task_id');
+            $messages = $this->messageModel->getThreadedMessages($projectId, $taskId);
+            $unreadCount = $this->messageModel->getUnreadCount($projectId, auth()->id());
+
+            return view('messages/index', [
+                'title' => 'Messages - ' . $project['name'],
+                'project' => $project,
+                'messages' => $messages,
+                'taskId' => $taskId,
+                'unreadCount' => $unreadCount,
+            ]);
+        } catch (\Throwable $e) {
+            $errorFile = WRITEPATH . 'logs/error_debug.log';
+            $errorMsg = date('Y-m-d H:i:s') . ' - MessagesController - ' . get_class($e) . ': ' . $e->getMessage() . "\n";
+            $errorMsg .= "File: " . $e->getFile() . " Line: " . $e->getLine() . "\n";
+            $errorMsg .= "Trace:\n" . $e->getTraceAsString() . "\n\n";
+            file_put_contents($errorFile, $errorMsg, FILE_APPEND);
+            
+            throw $e;
         }
-
-        $taskId = $this->request->getGet('task_id');
-        $messages = $this->messageModel->getThreadedMessages($projectId, $taskId);
-        $unreadCount = $this->messageModel->getUnreadCount($projectId, auth()->id());
-
-        return view('messages/index', [
-            'title' => 'Messages - ' . $project['name'],
-            'project' => $project,
-            'messages' => $messages,
-            'taskId' => $taskId,
-            'unreadCount' => $unreadCount,
-        ]);
     }
 
     public function store()
     {
         $data = $this->request->getPost();
         $data['user_id'] = auth()->id();
-        $data['message'] = trim($data['message'] ?? '');
+        $data['content'] = trim($data['content'] ?? $data['message'] ?? '');
 
-        if (empty($data['message'])) {
+        if (empty($data['content'])) {
             return redirect()->back()->withInput()->with('error', 'Message cannot be empty');
         }
+        
+        unset($data['message']);
 
         $user = auth()->user();
         $isAdmin = $user->inGroup('admin');

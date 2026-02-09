@@ -14,18 +14,17 @@ class AlertModel extends Model
     protected $allowedFields = [
         'type',
         'severity',
-        'entity_type',
-        'entity_id',
-        'user_id',
         'title',
         'message',
-        'action_url',
+        'entity_type',
+        'entity_id',
         'is_resolved',
         'resolved_at',
+        'resolved_by',
     ];
     protected $useTimestamps = true;
     protected $createdField = 'created_at';
-    protected $updatedField = 'updated_at';
+    protected $updatedField = '';
     protected $validationRules = [
         'type' => 'required|in_list[deadline_risk,inactivity,overload,budget_risk,performance_drop,blocker]',
         'severity' => 'required|in_list[low,medium,high,critical]',

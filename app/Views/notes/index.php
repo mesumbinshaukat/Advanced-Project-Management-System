@@ -44,14 +44,15 @@
                         <?php if ($note['is_pinned']): ?>
                         <i class="bi bi-pin-angle-fill text-warning me-2"></i>
                         <?php endif; ?>
-                        <?php
-                        $typeColors = ['note' => 'secondary', 'decision' => 'primary', 'blocker' => 'danger', 'update' => 'info'];
-                        $typeIcons = ['note' => 'journal-text', 'decision' => 'check-circle', 'blocker' => 'exclamation-triangle', 'update' => 'arrow-repeat'];
-                        ?>
-                        <span class="badge bg-<?= $typeColors[$note['type']] ?> me-2">
-                            <i class="bi bi-<?= $typeIcons[$note['type']] ?>"></i>
-                            <?= ucfirst($note['type']) ?>
+                        <?php if ($note['is_decision']): ?>
+                        <span class="badge bg-primary me-2">
+                            <i class="bi bi-check-circle"></i> Decision
                         </span>
+                        <?php else: ?>
+                        <span class="badge bg-secondary me-2">
+                            <i class="bi bi-journal-text"></i> Note
+                        </span>
+                        <?php endif; ?>
                         <?php if ($contextType === 'all'): ?>
                         <span class="badge bg-light text-dark me-2">
                             <?php if ($note['project_name']): ?>
@@ -60,9 +61,6 @@
                             <i class="bi bi-list-task"></i> <?= esc($note['task_title']) ?>
                             <?php endif; ?>
                         </span>
-                        <?php endif; ?>
-                        <?php if ($note['title']): ?>
-                        <strong><?= esc($note['title']) ?></strong>
                         <?php endif; ?>
                     </div>
                     <div class="dropdown">
@@ -109,17 +107,12 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Type</label>
-                        <select name="type" class="form-select" required>
-                            <option value="note">Note</option>
-                            <option value="decision">Decision</option>
-                            <option value="blocker">Blocker</option>
-                            <option value="update">Update</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Title (Optional)</label>
-                        <input type="text" name="title" class="form-control" placeholder="Brief title">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="is_decision" name="is_decision" value="1">
+                            <label class="form-check-label" for="is_decision">
+                                This is a decision
+                            </label>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Content</label>
@@ -141,6 +134,29 @@ function pinNote(id) {
         method: 'POST',
         headers: {'Content-Type': 'application/json'}
     }).then(() => location.reload());
+}
+
+function editNote(id) {
+    const note = document.querySelector(`[data-note-id="${id}"]`);
+    if (!note) return;
+    
+    const content = note.querySelector('.note-content')?.textContent || '';
+    const isDecision = note.querySelector('[data-is-decision]')?.dataset.isDecision === '1';
+    
+    const newContent = prompt('Edit note:', content);
+    if (newContent === null) return;
+    
+    fetch(`<?= base_url('api/notes/') ?>${id}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            content: newContent,
+            is_decision: isDecision ? 1 : 0
+        })
+    }).then(response => {
+        if (response.ok) location.reload();
+        else alert('Failed to update note');
+    });
 }
 
 function deleteNote(id) {

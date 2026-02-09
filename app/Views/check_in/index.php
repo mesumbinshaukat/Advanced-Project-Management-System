@@ -36,8 +36,8 @@
                                 'great' => ['icon' => 'emoji-smile-fill', 'color' => 'success', 'label' => 'Great'],
                                 'good' => ['icon' => 'emoji-smile', 'color' => 'info', 'label' => 'Good'],
                                 'okay' => ['icon' => 'emoji-neutral', 'color' => 'secondary', 'label' => 'Okay'],
-                                'struggling' => ['icon' => 'emoji-frown', 'color' => 'warning', 'label' => 'Struggling'],
-                                'blocked' => ['icon' => 'emoji-dizzy', 'color' => 'danger', 'label' => 'Blocked'],
+                                'bad' => ['icon' => 'emoji-frown', 'color' => 'warning', 'label' => 'Bad'],
+                                'terrible' => ['icon' => 'emoji-dizzy', 'color' => 'danger', 'label' => 'Terrible'],
                             ];
                             $currentMood = $today_check_in['mood'] ?? 'okay';
                             ?>
@@ -52,27 +52,30 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold">What did you accomplish yesterday?</label>
-                        <textarea name="yesterday_accomplishments" class="form-control" rows="3" placeholder="List your accomplishments..."><?= $today_check_in['yesterday_accomplishments'] ?? '' ?></textarea>
+                        <label class="form-label fw-bold">Productivity Level</label>
+                        <select name="productivity" class="form-select" required>
+                            <option value="">Select productivity level...</option>
+                            <option value="1" <?= ($today_check_in['productivity'] ?? '') === '1' ? 'selected' : '' ?>>Very Low</option>
+                            <option value="2" <?= ($today_check_in['productivity'] ?? '') === '2' ? 'selected' : '' ?>>Low</option>
+                            <option value="3" <?= ($today_check_in['productivity'] ?? '') === '3' ? 'selected' : '' ?>>Medium</option>
+                            <option value="4" <?= ($today_check_in['productivity'] ?? '') === '4' ? 'selected' : '' ?>>High</option>
+                            <option value="5" <?= ($today_check_in['productivity'] ?? '') === '5' ? 'selected' : '' ?>>Very High</option>
+                        </select>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold">What's your plan for today?</label>
-                        <textarea name="today_plan" class="form-control" rows="3" placeholder="What will you work on today?" required><?= $today_check_in['today_plan'] ?? '' ?></textarea>
+                        <label class="form-label fw-bold">What did you accomplish?</label>
+                        <textarea name="achievements" class="form-control" rows="3" placeholder="List your accomplishments..."><?= $today_check_in['achievements'] ?? '' ?></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">What's your plan?</label>
+                        <textarea name="plans" class="form-control" rows="3" placeholder="What will you work on?" required><?= $today_check_in['plans'] ?? '' ?></textarea>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Any blockers or challenges?</label>
                         <textarea name="blockers" class="form-control" rows="2" placeholder="Describe any blockers (optional)"><?= $today_check_in['blockers'] ?? '' ?></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input type="checkbox" name="needs_help" value="1" class="form-check-input" id="needs_help" <?= ($today_check_in['needs_help'] ?? 0) ? 'checked' : '' ?>>
-                            <label class="form-check-label" for="needs_help">
-                                <strong>I need help with something</strong>
-                            </label>
-                        </div>
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-lg w-100">
@@ -95,16 +98,16 @@
                 <?php foreach ($recent_check_ins as $checkIn): ?>
                 <div class="mb-3 pb-3 border-bottom">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <strong><?= date('M d, Y', strtotime($checkIn['check_in_date'])) ?></strong>
+                        <strong><?= date('M d, Y', strtotime($checkIn['date'])) ?></strong>
                         <?php
-                        $moodColors = ['great' => 'success', 'good' => 'info', 'okay' => 'secondary', 'struggling' => 'warning', 'blocked' => 'danger'];
+                        $moodColors = ['great' => 'success', 'good' => 'info', 'okay' => 'secondary', 'bad' => 'warning', 'terrible' => 'danger'];
                         ?>
                         <span class="badge bg-<?= $moodColors[$checkIn['mood']] ?>">
                             <?= ucfirst($checkIn['mood']) ?>
                         </span>
                     </div>
-                    <?php if ($checkIn['today_plan']): ?>
-                    <small class="text-muted d-block mb-1"><strong>Plan:</strong> <?= esc(substr($checkIn['today_plan'], 0, 100)) ?><?= strlen($checkIn['today_plan']) > 100 ? '...' : '' ?></small>
+                    <?php if ($checkIn['plans']): ?>
+                    <small class="text-muted d-block mb-1"><strong>Plan:</strong> <?= esc(substr($checkIn['plans'], 0, 100)) ?><?= strlen($checkIn['plans']) > 100 ? '...' : '' ?></small>
                     <?php endif; ?>
                     <?php if ($checkIn['blockers']): ?>
                     <small class="text-danger d-block"><strong>Blockers:</strong> <?= esc(substr($checkIn['blockers'], 0, 100)) ?></small>

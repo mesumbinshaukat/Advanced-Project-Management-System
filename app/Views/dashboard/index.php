@@ -131,7 +131,7 @@
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <strong><?= esc($activity['username'] ?? 'System') ?></strong>
-                                    <small class="text-muted d-block"><?= esc($activity['description']) ?></small>
+                                    <small class="text-muted d-block"><?= ucfirst($activity['action']) ?> <?= esc($activity['entity_type']) ?></small>
                                 </div>
                                 <small class="text-muted"><?= date('H:i', strtotime($activity['created_at'])) ?></small>
                             </div>
@@ -294,11 +294,13 @@
                 <a href="<?= base_url('tasks') ?>" class="btn btn-outline-primary w-100 mb-2">
                     <i class="bi bi-list-task"></i> View All Tasks
                 </a>
+                <!-- MILESTONE 2+ FEATURE - Hidden for Milestone 1
                 <?php if (!empty($my_projects)): ?>
                 <a href="<?= base_url('tasks/kanban/' . $my_projects[0]['id']) ?>" class="btn btn-outline-secondary w-100">
                     <i class="bi bi-kanban"></i> Kanban Board
                 </a>
                 <?php endif; ?>
+                -->
             </div>
         </div>
 

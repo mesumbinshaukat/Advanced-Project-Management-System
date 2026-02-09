@@ -33,7 +33,7 @@ class CheckInController extends BaseController
         $userId = auth()->id();
         $data = $this->request->getPost();
         $data['user_id'] = $userId;
-        $data['check_in_date'] = date('Y-m-d');
+        $data['date'] = date('Y-m-d');
 
         $existing = $this->checkInModel->getTodayCheckIn($userId);
 

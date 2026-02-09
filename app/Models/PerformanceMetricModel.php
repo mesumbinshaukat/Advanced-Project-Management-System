@@ -14,11 +14,9 @@ class PerformanceMetricModel extends Model
     protected $protectFields = true;
     protected $allowedFields = [
         'user_id',
-        'project_id',
-        'metric_date',
+        'month',
         'tasks_completed',
-        'hours_logged',
-        'efficiency_score',
+        'avg_completion_time',
         'quality_score',
         'on_time_delivery'
     ];
@@ -39,7 +37,7 @@ class PerformanceMetricModel extends Model
 
     protected $validationRules = [
         'user_id' => 'required|is_natural_no_zero',
-        'metric_date' => 'required|valid_date',
+        'month' => 'required|valid_date',
     ];
     protected $validationMessages = [];
     protected $skipValidation = false;
@@ -60,13 +58,13 @@ class PerformanceMetricModel extends Model
         $builder = $this->where('user_id', $userId);
         
         if ($startDate) {
-            $builder->where('metric_date >=', $startDate);
+            $builder->where('month >=', $startDate);
         }
         
         if ($endDate) {
-            $builder->where('metric_date <=', $endDate);
+            $builder->where('month <=', $endDate);
         }
         
-        return $builder->orderBy('metric_date', 'DESC')->findAll();
+        return $builder->orderBy('month', 'DESC')->findAll();
     }
 }

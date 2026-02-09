@@ -6,27 +6,27 @@ use CodeIgniter\Model;
 
 class DailyCheckInModel extends Model
 {
-    protected $table = 'daily_check_ins';
+    protected $table = 'check_ins';
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
     protected $returnType = 'array';
     protected $useSoftDeletes = false;
     protected $allowedFields = [
         'user_id',
-        'check_in_date',
+        'date',
         'mood',
-        'yesterday_accomplishments',
-        'today_plan',
+        'productivity',
         'blockers',
-        'needs_help',
+        'achievements',
+        'plans',
     ];
     protected $useTimestamps = true;
     protected $createdField = 'created_at';
-    protected $updatedField = 'updated_at';
+    protected $updatedField = '';
     protected $validationRules = [
         'user_id' => 'required|integer',
-        'check_in_date' => 'required|valid_date',
-        'mood' => 'required|in_list[great,good,okay,struggling,blocked]',
+        'date' => 'required|valid_date',
+        'mood' => 'required|in_list[great,good,okay,bad,terrible]',
     ];
     protected $validationMessages = [];
     protected $skipValidation = false;
@@ -34,15 +34,15 @@ class DailyCheckInModel extends Model
     public function getTodayCheckIn($userId)
     {
         return $this->where('user_id', $userId)
-            ->where('check_in_date', date('Y-m-d'))
+            ->where('date', date('Y-m-d'))
             ->first();
     }
 
     public function getRecentCheckIns($userId, $days = 7)
     {
         return $this->where('user_id', $userId)
-            ->where('check_in_date >=', date('Y-m-d', strtotime("-{$days} days")))
-            ->orderBy('check_in_date', 'DESC')
+            ->where('date >=', date('Y-m-d', strtotime("-{$days} days")))
+            ->orderBy('date', 'DESC')
             ->findAll();
     }
 
@@ -50,25 +50,25 @@ class DailyCheckInModel extends Model
     {
         $date = $date ?? date('Y-m-d');
         
-        return $this->select('daily_check_ins.*, users.username')
-            ->join('users', 'users.id = daily_check_ins.user_id')
-            ->where('daily_check_ins.check_in_date', $date)
-            ->orderBy('daily_check_ins.mood', 'DESC')
+        return $this->select('check_ins.*, users.username')
+            ->join('users', 'users.id = check_ins.user_id')
+            ->where('check_ins.date', $date)
+            ->orderBy('check_ins.mood', 'DESC')
             ->findAll();
     }
 
     public function getCheckInStreak($userId)
     {
-        $checkIns = $this->select('check_in_date')
+        $checkIns = $this->select('date')
             ->where('user_id', $userId)
-            ->orderBy('check_in_date', 'DESC')
+            ->orderBy('date', 'DESC')
             ->findAll(30);
 
         $streak = 0;
         $expectedDate = date('Y-m-d');
 
         foreach ($checkIns as $checkIn) {
-            if ($checkIn['check_in_date'] === $expectedDate) {
+            if ($checkIn['date'] === $expectedDate) {
                 $streak++;
                 $expectedDate = date('Y-m-d', strtotime($expectedDate . ' -1 day'));
             } else {

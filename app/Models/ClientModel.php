@@ -65,8 +65,7 @@ class ClientModel extends Model
             $activityModel->logActivity(
                 'client',
                 $data['id'][0] ?? $data['id'] ?? 0,
-                $action,
-                'Client ' . $action . 'd'
+                $action
             );
         }
         

@@ -12,20 +12,19 @@ class NoteModel extends Model
     protected $returnType = 'array';
     protected $useSoftDeletes = false;
     protected $allowedFields = [
+        'user_id',
         'project_id',
         'task_id',
-        'user_id',
-        'title',
         'content',
-        'type',
+        'is_decision',
         'is_pinned',
     ];
     protected $useTimestamps = true;
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';
+    protected $deletedField = '';
     protected $validationRules = [
         'content' => 'required',
-        'type' => 'required|in_list[note,decision,blocker,update]',
     ];
     protected $validationMessages = [];
     protected $skipValidation = false;
@@ -40,53 +39,57 @@ class NoteModel extends Model
         $action = '';
         
         if (isset($data['result']) && $data['result']) {
-            $action = 'created';
+            $action = 'create';
         } elseif (isset($data['id'])) {
-            $action = isset($data['data']['deleted_at']) ? 'deleted' : 'updated';
+            $action = 'update';
         }
 
         if ($action && isset($data['id'])) {
-            $activityModel->insert([
-                'user_id' => auth()->id() ?? 0,
-                'entity_type' => 'note',
-                'entity_id' => is_array($data['id']) ? $data['id'][0] : $data['id'],
-                'action' => $action,
-                'description' => ucfirst($action) . ' note',
-                'ip_address' => service('request')->getIPAddress(),
-                'user_agent' => service('request')->getUserAgent()->getAgentString(),
-            ]);
+            $activityModel->logActivity(
+                'note',
+                is_array($data['id']) ? $data['id'][0] : $data['id'],
+                $action
+            );
         }
 
         return $data;
     }
 
-    public function getProjectNotes($projectId, $includeDeleted = false)
+    public function getProjectNotes($projectId)
     {
-        $builder = $this->select('notes.*, users.username')
-            ->join('users', 'users.id = notes.user_id')
-            ->where('notes.project_id', $projectId)
-            ->orderBy('notes.is_pinned', 'DESC')
-            ->orderBy('notes.created_at', 'DESC');
-
-        if (!$includeDeleted) {
-            $builder->where('notes.deleted_at', null);
+        try {
+            return $this->select('notes.*, users.username')
+                ->join('users', 'users.id = notes.user_id')
+                ->where('notes.project_id', $projectId)
+                ->orderBy('notes.is_pinned', 'DESC')
+                ->orderBy('notes.created_at', 'DESC')
+                ->findAll();
+        } catch (\Throwable $e) {
+            $errorFile = WRITEPATH . 'logs/error_debug.log';
+            $errorMsg = date('Y-m-d H:i:s') . ' - NoteModel::getProjectNotes - ' . get_class($e) . ': ' . $e->getMessage() . "\n";
+            $errorMsg .= "File: " . $e->getFile() . " Line: " . $e->getLine() . "\n";
+            $errorMsg .= "Trace:\n" . $e->getTraceAsString() . "\n\n";
+            file_put_contents($errorFile, $errorMsg, FILE_APPEND);
+            throw $e;
         }
-
-        return $builder->findAll();
     }
 
-    public function getTaskNotes($taskId, $includeDeleted = false)
+    public function getTaskNotes($taskId)
     {
-        $builder = $this->select('notes.*, users.username')
-            ->join('users', 'users.id = notes.user_id')
-            ->where('notes.task_id', $taskId)
-            ->orderBy('notes.is_pinned', 'DESC')
-            ->orderBy('notes.created_at', 'DESC');
-
-        if (!$includeDeleted) {
-            $builder->where('notes.deleted_at', null);
+        try {
+            return $this->select('notes.*, users.username')
+                ->join('users', 'users.id = notes.user_id')
+                ->where('notes.task_id', $taskId)
+                ->orderBy('notes.is_pinned', 'DESC')
+                ->orderBy('notes.created_at', 'DESC')
+                ->findAll();
+        } catch (\Throwable $e) {
+            $errorFile = WRITEPATH . 'logs/error_debug.log';
+            $errorMsg = date('Y-m-d H:i:s') . ' - NoteModel::getTaskNotes - ' . get_class($e) . ': ' . $e->getMessage() . "\n";
+            $errorMsg .= "File: " . $e->getFile() . " Line: " . $e->getLine() . "\n";
+            $errorMsg .= "Trace:\n" . $e->getTraceAsString() . "\n\n";
+            file_put_contents($errorFile, $errorMsg, FILE_APPEND);
+            throw $e;
         }
-
-        return $builder->findAll();
     }
 }

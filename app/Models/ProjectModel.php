@@ -21,7 +21,12 @@ class ProjectModel extends Model
         'deadline',
         'budget',
         'priority',
-        'created_by'
+        'created_by',
+        'documentation',
+        'repository_url',
+        'staging_url',
+        'production_url',
+        'health_status'
     ];
 
     protected bool $allowEmptyInserts = false;
@@ -99,8 +104,7 @@ class ProjectModel extends Model
             $activityModel->logActivity(
                 'project',
                 $data['id'][0] ?? $data['id'] ?? 0,
-                $action,
-                'Project ' . $action . 'd'
+                $action
             );
         }
         

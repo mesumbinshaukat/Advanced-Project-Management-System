@@ -101,7 +101,7 @@ class AlertService
         }
 
         $checkIns = $this->checkInModel
-            ->select('user_id, MAX(check_in_date) as last_check_in')
+            ->select('user_id, MAX(date) as last_check_in')
             ->groupBy('user_id')
             ->findAll();
 

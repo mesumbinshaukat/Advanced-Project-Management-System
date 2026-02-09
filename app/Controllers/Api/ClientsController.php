@@ -16,7 +16,7 @@ class ClientsController extends ResourceController
     public function index()
     {
         $model = new ClientModel();
-        $clients = $model->where('is_active', 1)->findAll();
+        $clients = $model->findAll();
         
         return $this->respond([
             'status' => 'success',

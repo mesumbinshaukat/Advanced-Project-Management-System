@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class FinancialModel extends Model
 {
-    protected $table = 'financials';
+    protected $table = 'pricing';
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
     protected $returnType = 'array';
@@ -16,11 +16,7 @@ class FinancialModel extends Model
         'project_id',
         'hourly_rate',
         'fixed_price',
-        'total_cost',
-        'total_revenue',
-        'profit_margin',
-        'billing_type',
-        'currency'
+        'billing_type'
     ];
 
     protected bool $allowEmptyInserts = false;

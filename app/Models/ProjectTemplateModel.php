@@ -15,7 +15,6 @@ class ProjectTemplateModel extends Model
         'name',
         'description',
         'default_priority',
-        'estimated_duration_days',
         'default_budget',
         'task_templates',
         'created_by',
@@ -24,7 +23,7 @@ class ProjectTemplateModel extends Model
     protected $useTimestamps = true;
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';
-    protected $deletedField = 'deleted_at';
+    protected $deletedField = '';
     protected $validationRules = [
         'name' => 'required|min_length[3]|max_length[255]',
         'default_priority' => 'in_list[low,medium,high,urgent]',

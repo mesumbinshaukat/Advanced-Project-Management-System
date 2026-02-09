@@ -84,7 +84,7 @@ class ProjectsController extends BaseController
     public function create()
     {
         $clientModel = new ClientModel();
-        $clients = $clientModel->where('is_active', 1)->findAll();
+        $clients = $clientModel->findAll();
         
         $data = [
             'title' => 'Create Project',
@@ -104,7 +104,7 @@ class ProjectsController extends BaseController
         }
 
         $clientModel = new ClientModel();
-        $clients = $clientModel->where('is_active', 1)->findAll();
+        $clients = $clientModel->findAll();
         
         $data = [
             'title' => 'Edit Project',

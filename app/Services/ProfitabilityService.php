@@ -96,12 +96,6 @@ class ProfitabilityService
         $profit = $revenue - $cost;
         $profitMargin = $revenue > 0 ? (($profit / $revenue) * 100) : 0;
 
-        $this->financialModel->update($financial['id'], [
-            'total_cost' => $cost,
-            'total_revenue' => $revenue,
-            'profit_margin' => round($profitMargin, 2),
-        ]);
-
         return [
             'hours_logged' => $hoursLogged,
             'billable_hours' => $billableHoursTotal,

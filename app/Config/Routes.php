@@ -45,9 +45,7 @@ $routes->group('', ['filter' => 'session'], function($routes) {
     /*
     $routes->group('notes', ['filter' => 'permission:tasks.view.assigned,tasks.view.all'], function($routes) {
         $routes->get('/', 'NotesController::index');
-        $routes->get('create', 'NotesController::create');
         $routes->post('store', 'NotesController::store');
-        $routes->get('edit/(:num)', 'NotesController::edit/$1');
         $routes->post('update/(:num)', 'NotesController::update/$1');
         $routes->get('delete/(:num)', 'NotesController::delete/$1');
     });

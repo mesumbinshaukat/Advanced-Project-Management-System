@@ -155,26 +155,40 @@ $db_port = $env['database.default.port'] ?? 3306;
         
         // Define all columns that should exist based on code usage
         $requiredColumns = [
-            'completed_at' => "ALTER TABLE `tasks` ADD COLUMN `completed_at` DATETIME NULL AFTER `estimated_hours`",
+            ['table' => 'clients', 'column' => 'company', 'sql' => "ALTER TABLE `clients` ADD COLUMN `company` VARCHAR(255) NULL AFTER `phone`"],
+            ['table' => 'clients', 'column' => 'notes', 'sql' => "ALTER TABLE `clients` ADD COLUMN `notes` TEXT NULL AFTER `address`"],
+            ['table' => 'clients', 'column' => 'is_active', 'sql' => "ALTER TABLE `clients` ADD COLUMN `is_active` TINYINT(1) NOT NULL DEFAULT 1 AFTER `notes`"],
+            ['table' => 'tasks', 'column' => 'start_date', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `start_date` DATE NULL AFTER `deadline`"],
+            ['table' => 'tasks', 'column' => 'actual_hours', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `actual_hours` DECIMAL(5,2) NULL DEFAULT 0 AFTER `estimated_hours`"],
+            ['table' => 'tasks', 'column' => 'completed_at', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `completed_at` DATETIME NULL AFTER `actual_hours`"],
+            ['table' => 'tasks', 'column' => 'order_position', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `order_position` INT(11) NULL DEFAULT 0 AFTER `completed_at`"],
+            ['table' => 'time_entries', 'column' => 'is_billable', 'sql' => "ALTER TABLE `time_entries` ADD COLUMN `is_billable` TINYINT(1) NOT NULL DEFAULT 1 AFTER `description`"],
         ];
         
         $added = 0;
         $skipped = 0;
         
-        foreach ($requiredColumns as $column => $sql) {
-            if (in_array($column, $existingColumns)) {
-                echo '<div class="info">⊘ Column already exists: tasks.' . $column . '</div>';
+        foreach ($requiredColumns as $col) {
+            $table = $col['table'];
+            $column = $col['column'];
+            $sql = $col['sql'];
+            
+            // Check if column exists in the specific table
+            $checkResult = $mysqli->query("DESCRIBE `$table` `$column`");
+            
+            if ($checkResult && $checkResult->num_rows > 0) {
+                echo '<div class="info">⊘ Column already exists: ' . $table . '.' . $column . '</div>';
                 $skipped++;
             } else {
                 try {
                     if ($mysqli->query($sql)) {
-                        echo '<div class="success">✓ Added column: tasks.' . $column . '</div>';
+                        echo '<div class="success">✓ Added column: ' . $table . '.' . $column . '</div>';
                         $added++;
                     } else {
                         throw new Exception($mysqli->error);
                     }
                 } catch (Exception $e) {
-                    echo '<div class="error">✗ Error adding column tasks.' . $column . ': ' . htmlspecialchars($e->getMessage()) . '</div>';
+                    echo '<div class="error">✗ Error adding column ' . $table . '.' . $column . ': ' . htmlspecialchars($e->getMessage()) . '</div>';
                 }
             }
         }

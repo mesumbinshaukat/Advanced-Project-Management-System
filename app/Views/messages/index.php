@@ -37,7 +37,7 @@
                     <input type="hidden" name="task_id" value="<?= $taskId ?>">
                     <?php endif; ?>
                     <div class="input-group">
-                        <textarea id="messageInput" name="message" class="form-control" rows="2" placeholder="Type your message..." required maxlength="5000"></textarea>
+                        <textarea id="messageInput" name="content" class="form-control" rows="2" placeholder="Type your message..." required maxlength="5000"></textarea>
                         <button type="submit" class="btn btn-primary" id="sendBtn">
                             <i class="bi bi-send"></i> Send
                         </button>
@@ -100,7 +100,7 @@ function renderMessage(message, isReply = false) {
                         <small class="text-muted">${formatDate(message.created_at)}</small>
                     </div>
                     <div class="bg-light p-${isReply ? '2' : '3'} rounded ${isReply ? 'small' : ''}">
-                        ${escapeHtml(message.message).replace(/\n/g, '<br>')}
+                        ${escapeHtml(message.content).replace(/\n/g, '<br>')}
                     </div>`;
     
     if (!isReply && message.replies && message.replies.length > 0) {
@@ -203,7 +203,7 @@ async function sendMessage(event) {
         const formData = new FormData(form);
         const data = {
             project_id: parseInt(formData.get('project_id')),
-            message: message
+            content: message
         };
         
         if (formData.get('task_id')) {
@@ -257,7 +257,7 @@ async function sendReply(event, parentId) {
         const data = {
             project_id: projectId,
             parent_id: parentId,
-            message: message
+            content: message
         };
         
         if (taskId) data.task_id = taskId;

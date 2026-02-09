@@ -110,8 +110,7 @@ class TimeEntryModel extends Model
             $activityModel->logActivity(
                 'time_entry',
                 $data['id'][0] ?? $data['id'] ?? 0,
-                $action,
-                'Time entry ' . $action . 'd'
+                $action
             );
         }
         

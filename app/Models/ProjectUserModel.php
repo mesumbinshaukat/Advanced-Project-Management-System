@@ -15,8 +15,7 @@ class ProjectUserModel extends Model
     protected $allowedFields = [
         'project_id',
         'user_id',
-        'role',
-        'assigned_at'
+        'role'
     ];
 
     protected bool $allowEmptyInserts = false;
@@ -100,8 +99,7 @@ class ProjectUserModel extends Model
             $activityModel->logActivity(
                 'project_user',
                 $data['data']['project_id'] ?? 0,
-                $action,
-                'User ' . $action . ' to/from project'
+                $action
             );
         }
         

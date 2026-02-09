@@ -34,9 +34,11 @@
                         <td><?= esc($client['email'] ?? '-') ?></td>
                         <td><?= esc($client['phone'] ?? '-') ?></td>
                         <td>
-                            <span class="badge bg-<?= $client['is_active'] ? 'success' : 'secondary' ?>">
-                                <?= $client['is_active'] ? 'Active' : 'Inactive' ?>
-                            </span>
+                            <?php if ($client['is_active'] ?? 1): ?>
+                            <span class="badge bg-success">Active</span>
+                            <?php else: ?>
+                            <span class="badge bg-secondary">Inactive</span>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">

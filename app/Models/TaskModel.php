@@ -77,13 +77,24 @@ class TaskModel extends Model
 
     public function getTasksByStatus($projectId, $status = null)
     {
-        $builder = $this->where('project_id', $projectId);
-        
-        if ($status) {
-            $builder->where('status', $status);
+        try {
+            $builder = $this->select('tasks.*, users.username as assigned_username')
+                ->join('users', 'users.id = tasks.assigned_to', 'left')
+                ->where('tasks.project_id', $projectId);
+            
+            if ($status) {
+                $builder->where('tasks.status', $status);
+            }
+            
+            return $builder->orderBy('tasks.order_position', 'ASC')->findAll();
+        } catch (\Throwable $e) {
+            $errorFile = WRITEPATH . 'logs/error_debug.log';
+            $errorMsg = date('Y-m-d H:i:s') . ' - TaskModel::getTasksByStatus - ' . get_class($e) . ': ' . $e->getMessage() . "\n";
+            $errorMsg .= "File: " . $e->getFile() . " Line: " . $e->getLine() . "\n";
+            $errorMsg .= "Trace:\n" . $e->getTraceAsString() . "\n\n";
+            file_put_contents($errorFile, $errorMsg, FILE_APPEND);
+            throw $e;
         }
-        
-        return $builder->orderBy('order_position', 'ASC')->findAll();
     }
 
     public function updateTaskStatus($taskId, $status, $orderPosition = null)
@@ -124,8 +135,7 @@ class TaskModel extends Model
             $activityModel->logActivity(
                 'task',
                 $data['id'][0] ?? $data['id'] ?? 0,
-                $action,
-                'Task ' . $action . 'd'
+                $action
             );
         }
         

@@ -127,7 +127,7 @@ class PerformanceService
         
         $checkIns = $this->checkInModel
             ->where('user_id', $userId)
-            ->where('check_in_date >=', $startDate)
+            ->where('date >=', $startDate)
             ->countAllResults();
 
         $activities = $this->activityModel

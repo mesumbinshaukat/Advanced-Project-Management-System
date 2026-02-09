@@ -28,43 +28,53 @@ class TasksController extends BaseController
 
     public function kanban($projectId = null)
     {
-        $user = auth()->user();
-        $isAdmin = $user->inGroup('admin');
-        
-        if (!$projectId) {
-            return redirect()->to('/projects')->with('error', 'Project ID is required');
-        }
-
-        $projectModel = new ProjectModel();
-        $project = $projectModel->find($projectId);
-        
-        if (!$project) {
-            return redirect()->to('/projects')->with('error', 'Project not found');
-        }
-
-        if (!$isAdmin) {
-            $projectUserModel = new ProjectUserModel();
-            if (!$projectUserModel->isUserAssignedToProject($projectId, $user->id)) {
-                return redirect()->to('/projects')->with('error', 'You do not have access to this project');
+        try {
+            $user = auth()->user();
+            $isAdmin = $user->inGroup('admin');
+            
+            if (!$projectId) {
+                return redirect()->to('/projects')->with('error', 'Project ID is required');
             }
-        }
 
-        $taskModel = new TaskModel();
-        $statuses = ['backlog', 'todo', 'in_progress', 'review', 'done'];
-        $tasksByStatus = [];
-        
-        foreach ($statuses as $status) {
-            $tasksByStatus[$status] = $taskModel->getTasksByStatus($projectId, $status);
-        }
-        
-        $data = [
-            'title' => 'Kanban Board - ' . $project['name'],
-            'project' => $project,
-            'tasks_by_status' => $tasksByStatus,
-            'isAdmin' => $isAdmin,
-        ];
+            $projectModel = new ProjectModel();
+            $project = $projectModel->find($projectId);
+            
+            if (!$project) {
+                return redirect()->to('/projects')->with('error', 'Project not found');
+            }
 
-        return view('tasks/kanban', $data);
+            if (!$isAdmin) {
+                $projectUserModel = new ProjectUserModel();
+                if (!$projectUserModel->isUserAssignedToProject($projectId, $user->id)) {
+                    return redirect()->to('/projects')->with('error', 'You do not have access to this project');
+                }
+            }
+
+            $taskModel = new TaskModel();
+            $statuses = ['backlog', 'todo', 'in_progress', 'review', 'done'];
+            $tasksByStatus = [];
+            
+            foreach ($statuses as $status) {
+                $tasksByStatus[$status] = $taskModel->getTasksByStatus($projectId, $status);
+            }
+            
+            $data = [
+                'title' => 'Kanban Board - ' . $project['name'],
+                'project' => $project,
+                'tasks_by_status' => $tasksByStatus,
+                'isAdmin' => $isAdmin,
+            ];
+
+            return view('tasks/kanban', $data);
+        } catch (\Throwable $e) {
+            $errorFile = WRITEPATH . 'logs/error_debug.log';
+            $errorMsg = date('Y-m-d H:i:s') . ' - TasksController::kanban - ' . get_class($e) . ': ' . $e->getMessage() . "\n";
+            $errorMsg .= "File: " . $e->getFile() . " Line: " . $e->getLine() . "\n";
+            $errorMsg .= "Trace:\n" . $e->getTraceAsString() . "\n\n";
+            file_put_contents($errorFile, $errorMsg, FILE_APPEND);
+            
+            throw $e;
+        }
     }
 
     public function create($projectId = null)

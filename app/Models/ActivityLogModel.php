@@ -17,11 +17,8 @@ class ActivityLogModel extends Model
         'entity_type',
         'entity_id',
         'action',
-        'description',
         'old_values',
-        'new_values',
-        'ip_address',
-        'user_agent'
+        'new_values'
     ];
 
     protected bool $allowEmptyInserts = false;
@@ -53,7 +50,6 @@ class ActivityLogModel extends Model
 
     public function logActivity($entityType, $entityId, $action, $description = '', $oldValues = null, $newValues = null)
     {
-        $request = \Config\Services::request();
         $userId = auth()->id() ?? 0;
 
         $data = [
@@ -61,11 +57,8 @@ class ActivityLogModel extends Model
             'entity_type' => $entityType,
             'entity_id' => $entityId,
             'action' => $action,
-            'description' => $description,
             'old_values' => $oldValues ? json_encode($oldValues) : null,
             'new_values' => $newValues ? json_encode($newValues) : null,
-            'ip_address' => $request->getIPAddress(),
-            'user_agent' => $request->getUserAgent()->getAgentString(),
         ];
 
         return $this->insert($data);
