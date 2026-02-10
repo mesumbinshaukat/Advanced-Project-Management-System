@@ -2,19 +2,16 @@
 
 namespace App\Controllers;
 
-use App\Models\UserModel;
-use CodeIgniter\Shield\Models\UserModel as ShieldUserModel;
+use CodeIgniter\Shield\Models\UserModel;
 use CodeIgniter\Shield\Entities\User;
 
 class UsersController extends BaseController
 {
     protected $userModel;
-    protected $shieldUserModel;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
-        $this->shieldUserModel = new ShieldUserModel();
     }
 
     public function index()
@@ -24,7 +21,7 @@ class UsersController extends BaseController
             return redirect()->to('dashboard')->with('error', 'Unauthorized access');
         }
 
-        $users = $this->shieldUserModel->findAll();
+        $users = $this->userModel->findAll();
         
         return view('users/index', [
             'title' => 'User Management',
@@ -71,8 +68,8 @@ class UsersController extends BaseController
                 'password' => $this->request->getPost('password'),
             ]);
 
-            $this->shieldUserModel->save($user);
-            $userId = $this->shieldUserModel->getInsertID();
+            $this->userModel->save($user);
+            $userId = $this->userModel->getInsertID();
 
             // Assign role
             $role = $this->request->getPost('role');
@@ -117,7 +114,7 @@ class UsersController extends BaseController
             return redirect()->to('dashboard')->with('error', 'Unauthorized access');
         }
 
-        $user = $this->shieldUserModel->find($userId);
+        $user = $this->userModel->find($userId);
         if (!$user) {
             return redirect()->to('admin/users')->with('error', 'User not found');
         }
@@ -140,7 +137,7 @@ class UsersController extends BaseController
             $user->email = $this->request->getPost('email');
             $user->username = $this->request->getPost('username');
 
-            $this->shieldUserModel->save($user);
+            $this->userModel->save($user);
 
             // Update role if changed
             $newRole = $this->request->getPost('role');
@@ -172,14 +169,14 @@ class UsersController extends BaseController
             return redirect()->to('admin/users')->with('error', 'Unauthorized access');
         }
 
-        $user = $this->shieldUserModel->find($userId);
+        $user = $this->userModel->find($userId);
         if (!$user) {
             return redirect()->to('admin/users')->with('error', 'User not found');
         }
 
         // Prevent deactivating last admin
         if ($user->inGroup('admin')) {
-            $adminCount = $this->shieldUserModel->where('active', 1)->findAll();
+            $adminCount = $this->userModel->where('active', 1)->findAll();
             $adminCount = array_filter($adminCount, function($u) {
                 return $u->inGroup('admin');
             });
@@ -196,7 +193,7 @@ class UsersController extends BaseController
 
         try {
             $user->active = 0;
-            $this->shieldUserModel->save($user);
+            $this->userModel->save($user);
 
             // Log activity
             $activityModel = new \App\Models\ActivityLogModel();
@@ -215,7 +212,7 @@ class UsersController extends BaseController
             return redirect()->to('admin/users')->with('error', 'Unauthorized access');
         }
 
-        $user = $this->shieldUserModel->find($userId);
+        $user = $this->userModel->find($userId);
         if (!$user) {
             return redirect()->to('admin/users')->with('error', 'User not found');
         }
@@ -225,7 +222,7 @@ class UsersController extends BaseController
             $tempPassword = bin2hex(random_bytes(8));
             
             $user->password = $tempPassword;
-            $this->shieldUserModel->save($user);
+            $this->userModel->save($user);
 
             // Log activity
             $activityModel = new \App\Models\ActivityLogModel();
