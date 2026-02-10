@@ -162,8 +162,9 @@ class Auth extends ShieldAuth
      * Allow Registration
      * --------------------------------------------------------------------
      * Determines whether users can register for the site.
+     * MILESTONE 2: Disabled - only admin can create users via dashboard
      */
-    public bool $allowRegistration = true;
+    public bool $allowRegistration = false;
 
     /**
      * --------------------------------------------------------------------

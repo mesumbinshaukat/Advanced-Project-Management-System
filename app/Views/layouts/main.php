@@ -232,8 +232,13 @@
                     <i class="bi bi-people"></i> Clients
                 </a>
             </li>
+            <li class="sidebar-nav-item">
+                <a href="<?= base_url('admin/users') ?>" class="sidebar-nav-link <?= url_is('admin/users*') ? 'active' : '' ?>">
+                    <i class="bi bi-person-gear"></i> Users
+                </a>
+            </li>
             
-            <!-- MILESTONE 2+ FEATURES - Hidden for Milestone 1
+            <!-- MILESTONE 2+ FEATURES -->
             <li class="sidebar-nav-item">
                 <a href="<?= base_url('developers') ?>" class="sidebar-nav-link <?= url_is('developers*') ? 'active' : '' ?>">
                     <i class="bi bi-person-badge"></i> Developers
@@ -259,7 +264,6 @@
                     <i class="bi bi-file-earmark-text"></i> Templates
                 </a>
             </li>
-            -->
             <?php endif; ?>
         </ul>
     </div>

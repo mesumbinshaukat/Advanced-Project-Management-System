@@ -72,11 +72,9 @@
                                 <a href="<?= base_url('projects/view/' . $project['id']) ?>" class="btn btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <!-- MILESTONE 2+ FEATURE - Hidden for Milestone 1
                                 <a href="<?= base_url('tasks/kanban/' . $project['id']) ?>" class="btn btn-outline-info">
                                     <i class="bi bi-kanban"></i>
                                 </a>
-                                -->
                                 <?php if ($isAdmin): ?>
                                 <a href="<?= base_url('projects/edit/' . $project['id']) ?>" class="btn btn-outline-secondary">
                                     <i class="bi bi-pencil"></i>

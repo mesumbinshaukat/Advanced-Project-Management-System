@@ -41,8 +41,7 @@ $routes->group('', ['filter' => 'session'], function($routes) {
         $routes->post('store', 'TimeEntriesController::store');
     });
     
-    // MILESTONE 2+ FEATURES - Disabled for Milestone 1
-    /*
+    // MILESTONE 2+ FEATURES - Enabled
     $routes->group('notes', ['filter' => 'permission:tasks.view.assigned,tasks.view.all'], function($routes) {
         $routes->get('/', 'NotesController::index');
         $routes->post('store', 'NotesController::store');
@@ -96,7 +95,17 @@ $routes->group('', ['filter' => 'session'], function($routes) {
         $routes->get('developer/(:num)', 'PerformanceController::developer/$1');
         $routes->get('update-all', 'PerformanceController::updateAll');
     });
-    */
+    
+    // Admin User Management
+    $routes->group('admin', ['filter' => 'role:admin'], function($routes) {
+        $routes->get('users', 'UsersController::index');
+        $routes->get('users/create', 'UsersController::create');
+        $routes->post('users/store', 'UsersController::store');
+        $routes->get('users/edit/(:num)', 'UsersController::edit/$1');
+        $routes->post('users/update/(:num)', 'UsersController::update/$1');
+        $routes->post('users/deactivate/(:num)', 'UsersController::deactivate/$1');
+        $routes->post('users/reset-password/(:num)', 'UsersController::resetPassword/$1');
+    });
     
     $routes->group('api', function($routes) {
         $routes->group('projects', ['filter' => 'permission:projects.view.assigned,projects.view.all'], function($routes) {
@@ -134,8 +143,7 @@ $routes->group('', ['filter' => 'session'], function($routes) {
             $routes->delete('(:num)', 'Api\TimeEntriesController::delete/$1');
         });
         
-        // MILESTONE 2+ API FEATURES - Disabled for Milestone 1
-        /*
+        // MILESTONE 2+ API FEATURES - Enabled
         $routes->group('notes', ['filter' => 'permission:tasks.view.assigned,tasks.view.all'], function($routes) {
             $routes->get('/', 'Api\NotesController::index');
             $routes->post('/', 'Api\NotesController::create');
@@ -156,6 +164,5 @@ $routes->group('', ['filter' => 'session'], function($routes) {
             $routes->get('workload', 'Api\AssignmentController::workload');
             $routes->get('workload/(:num)', 'Api\AssignmentController::workload/$1');
         });
-        */
     });
 });
