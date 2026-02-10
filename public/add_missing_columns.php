@@ -168,6 +168,7 @@ $db_port = $env['database.default.port'] ?? 3306;
             ['table' => 'users', 'column' => 'speed_score', 'sql' => "ALTER TABLE `users` ADD COLUMN `speed_score` DECIMAL(5,2) NULL DEFAULT 50 AFTER `deadline_score`"],
             ['table' => 'users', 'column' => 'engagement_score', 'sql' => "ALTER TABLE `users` ADD COLUMN `engagement_score` DECIMAL(5,2) NULL DEFAULT 50 AFTER `speed_score`"],
             ['table' => 'users', 'column' => 'last_check_in', 'sql' => "ALTER TABLE `users` ADD COLUMN `last_check_in` DATETIME NULL AFTER `engagement_score`"],
+            ['table' => 'alerts', 'column' => 'user_id', 'sql' => "ALTER TABLE `alerts` ADD COLUMN `user_id` INT(11) UNSIGNED NULL AFTER `id`"],
         ];
         
         $added = 0;
