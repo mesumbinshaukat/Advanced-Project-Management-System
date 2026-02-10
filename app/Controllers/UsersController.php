@@ -71,9 +71,12 @@ class UsersController extends BaseController
             $this->userModel->save($user);
             $userId = $this->userModel->getInsertID();
 
-            // Assign role
-            $role = $this->request->getPost('role');
-            auth()->user()->addGroup($role, $userId);
+            // Assign role - fetch the newly created user and add group
+            $newUser = $this->userModel->find($userId);
+            if ($newUser) {
+                $role = $this->request->getPost('role');
+                $newUser->addGroup($role);
+            }
 
             // Log activity
             $activityModel = new \App\Models\ActivityLogModel();
@@ -92,7 +95,7 @@ class UsersController extends BaseController
             return redirect()->to('dashboard')->with('error', 'Unauthorized access');
         }
 
-        $user = $this->shieldUserModel->find($userId);
+        $user = $this->userModel->find($userId);
         if (!$user) {
             return redirect()->to('admin/users')->with('error', 'User not found');
         }
