@@ -317,7 +317,13 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <strong><?= esc($activity['username'] ?? 'System') ?></strong>
-                                <small class="text-muted d-block"><?= esc($activity['description']) ?></small>
+                                <small class="text-muted d-block">
+                                    <?php
+                                    $actionText = ucfirst(str_replace('_', ' ', $activity['action'] ?? 'unknown'));
+                                    $entityText = ucfirst($activity['entity_type'] ?? 'item');
+                                    echo esc($actionText . ' ' . $entityText);
+                                    ?>
+                                </small>
                             </div>
                             <small class="text-muted"><?= date('H:i', strtotime($activity['created_at'])) ?></small>
                         </div>
