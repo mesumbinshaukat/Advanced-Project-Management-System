@@ -139,7 +139,7 @@
             </div>
         </div>
         
-        <!-- MILESTONE 2+ FEATURES - Hidden for Milestone 1
+        <!-- MILESTONE 2+ FEATURES -->
         <?php if ($isAdmin): ?>
         <div class="card mt-3">
             <div class="card-header">Quick Actions</div>
@@ -168,7 +168,6 @@
             </div>
         </div>
         <?php endif; ?>
-        -->
     </div>
 </div>
 
