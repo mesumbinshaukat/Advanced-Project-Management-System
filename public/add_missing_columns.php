@@ -163,6 +163,11 @@ $db_port = $env['database.default.port'] ?? 3306;
             ['table' => 'tasks', 'column' => 'completed_at', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `completed_at` DATETIME NULL AFTER `actual_hours`"],
             ['table' => 'tasks', 'column' => 'order_position', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `order_position` INT(11) NULL DEFAULT 0 AFTER `completed_at`"],
             ['table' => 'time_entries', 'column' => 'is_billable', 'sql' => "ALTER TABLE `time_entries` ADD COLUMN `is_billable` TINYINT(1) NOT NULL DEFAULT 1 AFTER `description`"],
+            ['table' => 'users', 'column' => 'performance_score', 'sql' => "ALTER TABLE `users` ADD COLUMN `performance_score` DECIMAL(5,2) NULL DEFAULT 50 AFTER `deleted_at`"],
+            ['table' => 'users', 'column' => 'deadline_score', 'sql' => "ALTER TABLE `users` ADD COLUMN `deadline_score` DECIMAL(5,2) NULL DEFAULT 50 AFTER `performance_score`"],
+            ['table' => 'users', 'column' => 'speed_score', 'sql' => "ALTER TABLE `users` ADD COLUMN `speed_score` DECIMAL(5,2) NULL DEFAULT 50 AFTER `deadline_score`"],
+            ['table' => 'users', 'column' => 'engagement_score', 'sql' => "ALTER TABLE `users` ADD COLUMN `engagement_score` DECIMAL(5,2) NULL DEFAULT 50 AFTER `speed_score`"],
+            ['table' => 'users', 'column' => 'last_check_in', 'sql' => "ALTER TABLE `users` ADD COLUMN `last_check_in` DATETIME NULL AFTER `engagement_score`"],
         ];
         
         $added = 0;
