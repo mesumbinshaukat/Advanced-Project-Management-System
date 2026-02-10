@@ -55,7 +55,6 @@ class PerformanceService
             ->where('assigned_to', $userId)
             ->where('status', 'done')
             ->where('completed_at >=', $startDate)
-            ->where('deleted_at', null)
             ->findAll();
 
         if (empty($completedTasks)) {
@@ -98,7 +97,6 @@ class PerformanceService
             ->where('completed_at >=', $startDate)
             ->where('estimated_hours >', 0)
             ->where('actual_hours >', 0)
-            ->where('deleted_at', null)
             ->findAll();
 
         if (empty($tasks)) {
@@ -163,7 +161,6 @@ class PerformanceService
                 ->where('status', 'done')
                 ->where('completed_at >=', $startDate)
                 ->where('completed_at <=', $endDate . ' 23:59:59')
-                ->where('deleted_at', null)
                 ->countAllResults();
 
             $trend[] = [

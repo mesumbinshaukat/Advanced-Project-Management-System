@@ -63,7 +63,6 @@ class AssignmentService
         return $this->taskModel
             ->where('assigned_to', $userId)
             ->whereIn('status', ['todo', 'in_progress', 'review'])
-            ->where('deleted_at', null)
             ->countAllResults();
     }
 
@@ -96,7 +95,6 @@ class AssignmentService
         $tasks = $this->taskModel
             ->select('status, COUNT(*) as count')
             ->where('assigned_to', $userId)
-            ->where('deleted_at', null)
             ->groupBy('status')
             ->findAll();
 

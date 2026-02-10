@@ -64,7 +64,6 @@ class ProjectTemplateModel extends Model
     public function getActiveTemplates()
     {
         return $this->where('is_active', 1)
-            ->where('deleted_at', null)
             ->orderBy('name', 'ASC')
             ->findAll();
     }
