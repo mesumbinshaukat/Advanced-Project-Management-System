@@ -67,6 +67,23 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-check-lg"></i> Update User
                         </button>
+                        <?php if ($user->id != auth()->user()->id): ?>
+                            <?php if ($user->active): ?>
+                            <form method="post" action="<?= base_url('admin/users/deactivate/' . $user->id) ?>" style="display: inline;">
+                                <?= csrf_field() ?>
+                                <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Deactivate this user?')">
+                                    <i class="bi bi-x-circle"></i> Deactivate
+                                </button>
+                            </form>
+                            <?php else: ?>
+                            <form method="post" action="<?= base_url('admin/users/activate/' . $user->id) ?>" style="display: inline;">
+                                <?= csrf_field() ?>
+                                <button type="submit" class="btn btn-outline-success" onclick="return confirm('Activate this user?')">
+                                    <i class="bi bi-check-circle"></i> Activate
+                                </button>
+                            </form>
+                            <?php endif; ?>
+                        <?php endif; ?>
                         <a href="<?= base_url('admin/users') ?>" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </form>

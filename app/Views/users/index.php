@@ -90,6 +90,13 @@
                                         <i class="bi bi-x-circle"></i>
                                     </button>
                                 </form>
+                                <?php else: ?>
+                                <form method="post" action="<?= base_url('admin/users/activate/' . $user->id) ?>" style="display: inline;">
+                                    <?= csrf_field() ?>
+                                    <button type="submit" class="btn btn-outline-success btn-sm" onclick="return confirm('Activate this user?')">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                </form>
                                 <?php endif; ?>
                                 <?php endif; ?>
                             </div>

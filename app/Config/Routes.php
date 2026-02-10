@@ -104,6 +104,7 @@ $routes->group('', ['filter' => 'session'], function($routes) {
         $routes->get('users/edit/(:num)', 'UsersController::edit/$1');
         $routes->post('users/update/(:num)', 'UsersController::update/$1');
         $routes->post('users/deactivate/(:num)', 'UsersController::deactivate/$1');
+        $routes->post('users/activate/(:num)', 'UsersController::activate/$1');
         $routes->post('users/reset-password/(:num)', 'UsersController::resetPassword/$1');
     });
     

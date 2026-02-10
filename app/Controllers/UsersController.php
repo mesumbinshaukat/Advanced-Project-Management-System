@@ -208,6 +208,32 @@ class UsersController extends BaseController
         }
     }
 
+    public function activate($userId)
+    {
+        // Admin only
+        if (!auth()->user()->inGroup('admin')) {
+            return redirect()->to('admin/users')->with('error', 'Unauthorized access');
+        }
+
+        $user = $this->userModel->find($userId);
+        if (!$user) {
+            return redirect()->to('admin/users')->with('error', 'User not found');
+        }
+
+        try {
+            $user->active = 1;
+            $this->userModel->save($user);
+
+            // Log activity
+            $activityModel = new \App\Models\ActivityLogModel();
+            $activityModel->logActivity('user', $userId, 'activate');
+
+            return redirect()->to('admin/users')->with('success', 'User activated successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to activate user: ' . $e->getMessage());
+        }
+    }
+
     public function resetPassword($userId)
     {
         // Admin only
