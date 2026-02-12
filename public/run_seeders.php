@@ -8,26 +8,34 @@
  * SECURITY: Delete this file after running!
  */
 
+// Set proper encoding
+header('Content-Type: text/html; charset=utf-8');
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+// Define path constants - use realpath for reliable path resolution
+$ROOTPATH = realpath(__DIR__ . '/../') . DIRECTORY_SEPARATOR;
+
 // Load environment variables from .env
-$envFile = __DIR__ . '/../.env';
+$envFile = $ROOTPATH . '.env';
 $env = [];
 
-if (file_exists($envFile)) {
-    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        $line = trim($line);
-        if ($line === '' || str_starts_with($line, '#') || strpos($line, '=') === false) {
-            continue;
-        }
+if (!file_exists($envFile)) {
+    die('<h1>Error: .env file not found</h1><p>Expected at: ' . htmlspecialchars($envFile) . '</p>');
+}
 
-        [$key, $value] = explode('=', $line, 2);
-        $key = trim($key);
-        $value = trim($value, " \t\n\r\0\x0B'\"");
-        $env[$key] = $value;
+$lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+foreach ($lines as $line) {
+    $line = trim($line);
+    if ($line === '' || str_starts_with($line, '#') || strpos($line, '=') === false) {
+        continue;
     }
+
+    [$key, $value] = explode('=', $line, 2);
+    $key = trim($key);
+    $value = trim($value, " \t\n\r\0\x0B'\"");
+    $env[$key] = $value;
 }
 
 // Database config from .env
@@ -141,7 +149,7 @@ $devPassword = 'developer123';
 </head>
 <body>
     <div class="container">
-        <h1>≡ƒî▒ Seeder Runner - Create Initial Users</h1>
+        <h1>Seeder Runner - Create Initial Users</h1>
         <p><strong>Purpose:</strong> Create admin and developer accounts for first-time setup</p>
         
         <?php
@@ -154,12 +162,12 @@ $devPassword = 'developer123';
                 throw new Exception('Connection failed: ' . $mysqli->connect_error);
             }
             $mysqli->set_charset('utf8mb4');
-            echo '<div class="success">Γ£ô Database connection successful!</div>';
+            echo '<div class="success">Database connection successful!</div>';
             echo '<pre>';
             echo 'Database: ' . $db_name . "\n";
             echo '</pre>';
         } catch (Exception $e) {
-            echo '<div class="error">Γ£ù Database connection failed!</div>';
+            echo '<div class="error">Database connection failed!</div>';
             echo '<pre>' . htmlspecialchars($e->getMessage()) . '</pre>';
             echo '<div class="warning">Check your .env file for correct database credentials.</div>';
             die('</div></div></body></html>');
@@ -194,16 +202,16 @@ $devPassword = 'developer123';
         }
         
         if (!empty($missingTables)) {
-            echo '<div class="error">Γ£ù Missing required tables: ' . implode(', ', $missingTables) . '</div>';
+            echo '<div class="error">Missing required tables: ' . implode(', ', $missingTables) . '</div>';
             echo '<div class="warning">Please run migrations first using run_migrations.php</div>';
             echo '<div class="info">Tip: Visit run_migrations.php to set up the database tables first.</div>';
             die('</div></div></body></html>');
         }
         
-        echo '<div class="success">Γ£ô All required tables exist</div>';
+        echo '<div class="success">All required tables exist</div>';
         echo '<ul>';
         foreach ($requiredTables as $table) {
-            echo '<li>Γ£ô ' . $table . '</li>';
+            echo '<li>' . $table . '</li>';
         }
         echo '</ul>';
         echo '</div>';
@@ -220,14 +228,14 @@ $devPassword = 'developer123';
                 $existingUser = $result->fetch_assoc();
                 $userId = $existingUser['id'];
                 
-                echo '<div class="info">Γä╣∩╕Å Admin user already exists (ID: ' . $userId . '). Removing old data...</div>';
+                echo '<div class="info">Admin user already exists (ID: ' . $userId . '). Removing old data...</div>';
                 
                 // Delete related records
                 $mysqli->query("DELETE FROM auth_identities WHERE user_id = $userId");
                 $mysqli->query("DELETE FROM auth_groups_users WHERE user_id = $userId");
                 $mysqli->query("DELETE FROM users WHERE id = $userId");
                 
-                echo '<div class="success">Γ£ô Old admin user removed</div>';
+                echo '<div class="success">Old admin user removed</div>';
             }
             
             // Create fresh admin user
@@ -258,11 +266,11 @@ $devPassword = 'developer123';
                 throw new Exception('Failed to assign admin group: ' . $stmt->error);
             }
             
-            echo '<div class="success">Γ£ô Admin user created successfully (ID: ' . $adminUserId . ')</div>';
-            echo '<div class="success">Γ£ô Admin group assigned</div>';
+            echo '<div class="success">Admin user created successfully (ID: ' . $adminUserId . ')</div>';
+            echo '<div class="success">Admin group assigned</div>';
             
         } catch (Exception $e) {
-            echo '<div class="error">Γ£ù Error creating admin user</div>';
+            echo '<div class="error">Error creating admin user</div>';
             echo '<pre>' . htmlspecialchars($e->getMessage()) . '</pre>';
         }
         
@@ -280,14 +288,14 @@ $devPassword = 'developer123';
                 $existingUser = $result->fetch_assoc();
                 $userId = $existingUser['id'];
                 
-                echo '<div class="info">Γä╣∩╕Å Developer user already exists (ID: ' . $userId . '). Removing old data...</div>';
+                echo '<div class="info">Developer user already exists (ID: ' . $userId . '). Removing old data...</div>';
                 
                 // Delete related records
                 $mysqli->query("DELETE FROM auth_identities WHERE user_id = $userId");
                 $mysqli->query("DELETE FROM auth_groups_users WHERE user_id = $userId");
                 $mysqli->query("DELETE FROM users WHERE id = $userId");
                 
-                echo '<div class="success">Γ£ô Old developer user removed</div>';
+                echo '<div class="success">Old developer user removed</div>';
             }
             
             // Create fresh developer user
@@ -318,11 +326,11 @@ $devPassword = 'developer123';
                 throw new Exception('Failed to assign developer group: ' . $stmt->error);
             }
             
-            echo '<div class="success">Γ£ô Developer user created successfully (ID: ' . $devUserId . ')</div>';
-            echo '<div class="success">Γ£ô Developer group assigned</div>';
+            echo '<div class="success">Developer user created successfully (ID: ' . $devUserId . ')</div>';
+            echo '<div class="success">Developer group assigned</div>';
             
         } catch (Exception $e) {
-            echo '<div class="error">Γ£ù Error creating developer user</div>';
+            echo '<div class="error">Error creating developer user</div>';
             echo '<pre>' . htmlspecialchars($e->getMessage()) . '</pre>';
         }
         
@@ -347,7 +355,7 @@ $devPassword = 'developer123';
                 echo '<tr style="background: #f8f9fa;"><th>ID</th><th>Username</th><th>Email</th><th>Group</th><th>Active</th></tr>';
                 
                 while ($row = $result->fetch_assoc()) {
-                    $activeStatus = $row['active'] ? '<span style="color: #155724;">Γ£ô Yes</span>' : '<span style="color: #721c24;">Γ£ù No</span>';
+                    $activeStatus = $row['active'] ? '<span style="color: #155724;">Yes</span>' : '<span style="color: #721c24;">No</span>';
                     echo '<tr>';
                     echo '<td>' . $row['id'] . '</td>';
                     echo '<td><strong>' . $row['username'] . '</strong></td>';
@@ -358,7 +366,7 @@ $devPassword = 'developer123';
                 }
                 
                 echo '</table>';
-                echo '<div class="success">Γ£ô All users verified and active!</div>';
+                echo '<div class="success">All users verified and active!</div>';
             }
         } catch (Exception $e) {
             echo '<div class="error">Error verifying users: ' . htmlspecialchars($e->getMessage()) . '</div>';
@@ -370,7 +378,7 @@ $devPassword = 'developer123';
         ?>
 
         <div class="credentials">
-            <h3>≡ƒöæ Login Credentials</h3>
+            <h3>Login Credentials</h3>
             <p><strong>IMPORTANT:</strong> Save these credentials securely!</p>
             
             <div style="margin: 15px 0;">
@@ -388,12 +396,12 @@ $devPassword = 'developer123';
             </div>
             
             <p style="margin-top: 15px; font-size: 13px; color: #856404;">
-                <strong>ΓÜá∩╕Å Change these passwords immediately after first login!</strong>
+                <strong>Change these passwords immediately after first login!</strong>
             </p>
         </div>
 
         <div class="success">
-            <h3>Γ£à Seeding Complete!</h3>
+            <h3>Seeding Complete!</h3>
             <p><strong>Next Steps:</strong></p>
             <ol>
                 <li><strong>DELETE THIS FILE:</strong> <code>public/run_seeders.php</code></li>
@@ -404,7 +412,7 @@ $devPassword = 'developer123';
         </div>
 
         <div class="warning">
-            <h3>ΓÜá∩╕Å CRITICAL SECURITY WARNING</h3>
+            <h3>CRITICAL SECURITY WARNING</h3>
             <p>This file creates users with default passwords. <strong>DELETE IT IMMEDIATELY</strong> after running to prevent unauthorized account creation!</p>
             <p>Command to delete: <code>rm public/run_seeders.php</code></p>
         </div>

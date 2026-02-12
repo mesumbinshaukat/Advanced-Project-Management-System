@@ -110,7 +110,7 @@ $db_port = $env['database.default.port'] ?? 3306;
 </head>
 <body>
     <div class="container">
-        <h1>≡ƒöº Create Settings Table</h1>
+        <h1>Create Settings Table</h1>
         <p><strong>Purpose:</strong> Fix "Table 'settings' doesn't exist" error</p>
         
         <?php
@@ -123,12 +123,12 @@ $db_port = $env['database.default.port'] ?? 3306;
                 throw new Exception('Connection failed: ' . $mysqli->connect_error);
             }
             $mysqli->set_charset('utf8mb4');
-            echo '<div class="success">Γ£ô Connected successfully!</div>';
+            echo '<div class="success">Connected successfully!</div>';
             echo '<pre>';
             echo 'Database: ' . $db_name . "\n";
             echo '</pre>';
         } catch (Exception $e) {
-            echo '<div class="error">Γ£ù Connection failed!</div>';
+            echo '<div class="error">Connection failed!</div>';
             echo '<pre>' . htmlspecialchars($e->getMessage()) . '</pre>';
             die('</div></div></body></html>');
         }
@@ -141,10 +141,10 @@ $db_port = $env['database.default.port'] ?? 3306;
         
         $result = $mysqli->query("SHOW TABLES LIKE 'settings'");
         if ($result && $result->num_rows > 0) {
-            echo '<div class="success">Γ£ô Settings table already exists! No action needed.</div>';
+            echo '<div class="success">Settings table already exists! No action needed.</div>';
             echo '</div>';
         } else {
-            echo '<div class="warning">ΓÜá∩╕Å Settings table does not exist. Creating now...</div>';
+            echo '<div class="warning">Settings table does not exist. Creating now...</div>';
             echo '</div>';
             
             // Create settings table
@@ -166,7 +166,7 @@ $db_port = $env['database.default.port'] ?? 3306;
             
             try {
                 if ($mysqli->query($createTableSQL)) {
-                    echo '<div class="success">Γ£ô Settings table created successfully!</div>';
+                    echo '<div class="success">Settings table created successfully!</div>';
                     echo '<pre>Table structure:
 - id (auto increment)
 - class (varchar 255)
@@ -181,7 +181,7 @@ $db_port = $env['database.default.port'] ?? 3306;
                     throw new Exception($mysqli->error);
                 }
             } catch (Exception $e) {
-                echo '<div class="error">Γ£ù Failed to create table!</div>';
+                echo '<div class="error">Failed to create table!</div>';
                 echo '<pre>' . htmlspecialchars($e->getMessage()) . '</pre>';
             }
             
@@ -195,7 +195,7 @@ $db_port = $env['database.default.port'] ?? 3306;
         try {
             $result = $mysqli->query("DESCRIBE settings");
             if ($result) {
-                echo '<div class="success">Γ£ô Table structure verified!</div>';
+                echo '<div class="success">Table structure verified!</div>';
                 echo '<table border="1" cellpadding="8" style="border-collapse: collapse; width: 100%; margin: 10px 0;">';
                 echo '<tr style="background: #f8f9fa;"><th>Field</th><th>Type</th><th>Null</th><th>Key</th><th>Default</th></tr>';
                 while ($row = $result->fetch_assoc()) {
@@ -219,7 +219,7 @@ $db_port = $env['database.default.port'] ?? 3306;
         ?>
 
         <div class="success">
-            <h3>Γ£à Process Complete!</h3>
+            <h3>Process Complete!</h3>
             <p><strong>Next Steps:</strong></p>
             <ol>
                 <li><strong>DELETE THIS FILE:</strong> <code>public/create_settings_table.php</code></li>
@@ -230,7 +230,7 @@ $db_port = $env['database.default.port'] ?? 3306;
         </div>
 
         <div class="warning">
-            <h3>ΓÜá∩╕Å Security Warning</h3>
+            <h3>Security Warning</h3>
             <p>This file provides direct database access. <strong>Remove it immediately</strong> after running!</p>
         </div>
 

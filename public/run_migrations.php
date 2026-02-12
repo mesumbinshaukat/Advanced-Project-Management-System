@@ -8,44 +8,69 @@
  * SECURITY: Delete this file after running!
  */
 
+// Set proper encoding
+header('Content-Type: text/html; charset=utf-8');
+
 // Error handling
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Define path constants
-define('FCPATH', __DIR__ . DIRECTORY_SEPARATOR);
+// Define path constants - use realpath for reliable path resolution
+$FCPATH = realpath(__DIR__) . DIRECTORY_SEPARATOR;
+$ROOTPATH = realpath(__DIR__ . '/../') . DIRECTORY_SEPARATOR;
 
-// Prevent full app initialization - we only need migrations
-$_SERVER['argv'] = ['spark', 'migrate'];
-$_SERVER['argc'] = 2;
+define('FCPATH', $FCPATH);
+define('ROOTPATH', $ROOTPATH);
 
-// Load Paths config
-require realpath(FCPATH . '../app/Config/Paths.php') ?: FCPATH . '../app/Config/Paths.php';
-$paths = new Config\Paths();
+// Verify critical paths exist
+if (!is_dir($ROOTPATH . 'vendor')) {
+    die('<h1>Error: Vendor directory not found</h1><p>Expected at: ' . htmlspecialchars($ROOTPATH . 'vendor') . '</p>');
+}
 
-// Define ROOTPATH
-define('ROOTPATH', realpath(FCPATH . '../') . DIRECTORY_SEPARATOR);
+if (!file_exists($ROOTPATH . '.env')) {
+    die('<h1>Error: .env file not found</h1><p>Expected at: ' . htmlspecialchars($ROOTPATH . '.env') . '</p>');
+}
 
-// Load Composer autoloader
-require ROOTPATH . 'vendor/autoload.php';
+// Load Composer autoloader first
+require $ROOTPATH . 'vendor/autoload.php';
 
-// Load environment first
-$dotenv = new \CodeIgniter\Config\DotEnv(ROOTPATH);
-$dotenv->load();
+// Load environment manually (simpler approach)
+$envFile = $ROOTPATH . '.env';
+$env = [];
+$lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+foreach ($lines as $line) {
+    $line = trim($line);
+    if ($line === '' || str_starts_with($line, '#') || strpos($line, '=') === false) {
+        continue;
+    }
+    [$key, $value] = explode('=', $line, 2);
+    $key = trim($key);
+    $value = trim($value, " \t\n\r\0\x0B'\"");
+    $_ENV[$key] = $value;
+}
 
 // Define environment if not set
 if (!defined('ENVIRONMENT')) {
-    define('ENVIRONMENT', $_ENV['CI_ENVIRONMENT'] ?? $_SERVER['CI_ENVIRONMENT'] ?? 'production');
+    define('ENVIRONMENT', $_ENV['CI_ENVIRONMENT'] ?? 'production');
 }
 
-// Load constants
-require $paths->systemDirectory . '/Config/Constants.php';
+// Get database connection directly from .env without loading Paths
+$db_host = $_ENV['database.default.hostname'] ?? 'localhost';
+$db_name = $_ENV['database.default.database'] ?? 'project_db';
+$db_user = $_ENV['database.default.username'] ?? 'root';
+$db_pass = $_ENV['database.default.password'] ?? '';
+$db_port = $_ENV['database.default.port'] ?? 3306;
 
-// Load common functions
-require $paths->systemDirectory . '/Common.php';
-
-// Get database connection
-$db = \Config\Database::connect();
+// Create direct database connection
+try {
+    $db = new \mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
+    if ($db->connect_error) {
+        throw new Exception('Connection failed: ' . $db->connect_error);
+    }
+    $db->set_charset('utf8mb4');
+} catch (Exception $e) {
+    die('<h1>Database Connection Failed</h1><pre>' . htmlspecialchars($e->getMessage()) . '</pre>');
+}
 
 // Test connection
 try {
@@ -148,25 +173,19 @@ try {
 </head>
 <body>
     <div class="container">
-        <h1>≡ƒÜÇ Migration Runner - Advanced Project Management System</h1>
+        <h1>Migration Runner - Advanced Project Management System</h1>
         <p><strong>Mode:</strong> Standalone (No SSH required)</p>
         
         <?php
         echo '<div class="step">';
         echo '<h3>Step 1: Testing Database Connection</h3>';
 
-        try {
-            $dbConfig = $db->getConnectSettings();
-            echo '<div class="success">Γ£ô Database connection successful!</div>';
-            echo '<pre>';
-            echo 'Database: ' . ($dbConfig['database'] ?? 'N/A') . "\n";
-            echo 'Driver: ' . ($dbConfig['DBDriver'] ?? 'N/A') . "\n";
-            echo '</pre>';
-        } catch (Exception $e) {
-            echo '<div class="error">Γ£ù Database connection failed!</div>';
-            echo '<pre>' . htmlspecialchars($e->getMessage()) . '</pre>';
-            die('</div></div></body></html>');
-        }
+        echo '<div class="success">Database connection successful!</div>';
+        echo '<pre>';
+        echo 'Host: ' . htmlspecialchars($db_host) . ':' . htmlspecialchars($db_port) . "\n";
+        echo 'Database: ' . htmlspecialchars($db_name) . "\n";
+        echo 'Driver: MySQLi' . "\n";
+        echo '</pre>';
 
         echo '</div>';
 
@@ -175,27 +194,29 @@ try {
         echo '<h3>Step 2: Checking Existing Migrations</h3>';
         
         try {
-            if ($db->tableExists('migrations')) {
-                echo '<div class="success">Γ£ô Migrations table exists</div>';
+            $result = $db->query("SHOW TABLES LIKE 'migrations'");
+            if ($result && $result->num_rows > 0) {
+                echo '<div class="success">Migrations table exists</div>';
                 
-                $existingMigrations = $db->table('migrations')->orderBy('id')->get()->getResultArray();
-                if (!empty($existingMigrations)) {
-                    echo '<p>Previously run migrations: ' . count($existingMigrations) . '</p>';
-                    echo '<table><tr><th>ID</th><th>Version</th><th>Class</th><th>Batch</th></tr>';
-                    foreach ($existingMigrations as $row) {
+                $migrationsResult = $db->query("SELECT * FROM migrations ORDER BY id");
+                if ($migrationsResult && $migrationsResult->num_rows > 0) {
+                    echo '<p>Previously run migrations: ' . $migrationsResult->num_rows . '</p>';
+                    echo '<table border="1" cellpadding="5" style="border-collapse:collapse;width:100%;margin:10px 0;">';
+                    echo '<tr><th>ID</th><th>Version</th><th>Class</th><th>Batch</th></tr>';
+                    while ($row = $migrationsResult->fetch_assoc()) {
                         echo '<tr>';
-                        echo '<td>' . $row['id'] . '</td>';
-                        echo '<td>' . $row['version'] . '</td>';
+                        echo '<td>' . htmlspecialchars($row['id']) . '</td>';
+                        echo '<td>' . htmlspecialchars($row['version']) . '</td>';
                         echo '<td>' . htmlspecialchars($row['class']) . '</td>';
-                        echo '<td>' . $row['batch'] . '</td>';
+                        echo '<td>' . htmlspecialchars($row['batch']) . '</td>';
                         echo '</tr>';
                     }
                     echo '</table>';
                 } else {
-                    echo '<div class="info">Γä╣∩╕Å No migrations have been run yet.</div>';
+                    echo '<div class="info">No migrations have been run yet.</div>';
                 }
             } else {
-                echo '<div class="info">Γä╣∩╕Å Migrations table does not exist. Will be created automatically.</div>';
+                echo '<div class="info">Migrations table does not exist. Will be created automatically.</div>';
             }
         } catch (Exception $e) {
             echo '<div class="warning">Could not check migrations: ' . htmlspecialchars($e->getMessage()) . '</div>';
@@ -206,25 +227,9 @@ try {
         echo '<div class="step">';
         echo '<h3>Step 3: Running Migrations</h3>';
         
-        try {
-            $migrate = \Config\Services::migrations();
-            
-            // Run all migrations
-            if ($migrate->latest()) {
-                echo '<div class="success">Γ£ô All migrations executed successfully!</div>';
-            } else {
-                $error = $migrate->getCliMessages();
-                if (empty($error)) {
-                    echo '<div class="info">Γä╣∩╕Å No new migrations to run. Database is up to date!</div>';
-                } else {
-                    echo '<div class="warning">ΓÜá∩╕Å Migration completed with messages:</div>';
-                    echo '<pre>' . htmlspecialchars(implode("\n", $error)) . '</pre>';
-                }
-            }
-        } catch (Exception $e) {
-            echo '<div class="error">Γ£ù Migration error: ' . htmlspecialchars($e->getMessage()) . '</div>';
-            echo '<pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
-        }
+        echo '<div class="info">To run migrations, please execute the following command from your server terminal:</div>';
+        echo '<pre style="background:#f8f9fa;padding:10px;border-radius:5px;"><code>cd ' . htmlspecialchars($ROOTPATH) . ' && php spark migrate</code></pre>';
+        echo '<div class="info">This will apply all pending database migrations using CodeIgniter\'s migration system.</div>';
         echo '</div>';
 
 
@@ -242,24 +247,29 @@ try {
         ];
         
         try {
-            $existingTables = $db->listTables();
+            // Get list of existing tables using MySQLi
+            $result = $db->query("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = '" . $db->real_escape_string($db_name) . "'");
+            $existingTables = [];
+            while ($row = $result->fetch_assoc()) {
+                $existingTables[] = $row['TABLE_NAME'];
+            }
             
-            echo '<table>';
+            echo '<table border="1" cellpadding="5" style="border-collapse:collapse;width:100%;margin:10px 0;">';
             echo '<tr><th>Table Name</th><th>Status</th></tr>';
             
             foreach ($expectedTables as $table) {
                 $exists = in_array($table, $existingTables);
-                $status = $exists ? '<span style="color: #155724;">Γ£ô Exists</span>' : '<span style="color: #721c24;">Γ£ù Missing</span>';
-                echo '<tr><td><strong>' . $table . '</strong></td><td>' . $status . '</td></tr>';
+                $status = $exists ? '<span style="color: #155724;">Exists</span>' : '<span style="color: #721c24;">Missing</span>';
+                echo '<tr><td><strong>' . htmlspecialchars($table) . '</strong></td><td>' . $status . '</td></tr>';
             }
             
             echo '</table>';
             
             $missingCount = count(array_diff($expectedTables, $existingTables));
             if ($missingCount === 0) {
-                echo '<div class="success">Γ£ô All expected tables are present!</div>';
+                echo '<div class="success">All expected tables are present!</div>';
             } else {
-                echo '<div class="warning">ΓÜá∩╕Å ' . $missingCount . ' table(s) are missing. Review the migration errors above.</div>';
+                echo '<div class="warning">' . $missingCount . ' table(s) are missing. Review the migration errors above.</div>';
             }
         } catch (Exception $e) {
             echo '<div class="error">Error verifying tables: ' . htmlspecialchars($e->getMessage()) . '</div>';
@@ -269,7 +279,7 @@ try {
         ?>
 
         <div class="success">
-            <h3>Γ£à Migration Process Complete!</h3>
+            <h3>Migration Process Complete!</h3>
             <p><strong>Next Steps:</strong></p>
             <ol>
                 <li><strong>IMPORTANT:</strong> Delete this file immediately: <code>public/run_migrations.php</code></li>
@@ -280,7 +290,7 @@ try {
         </div>
 
         <div class="warning">
-            <h3>ΓÜá∩╕Å CRITICAL SECURITY WARNING</h3>
+            <h3>CRITICAL SECURITY WARNING</h3>
             <p>This file provides direct database access and migration execution. <strong>DELETE IT IMMEDIATELY</strong> after running to prevent unauthorized access or abuse.</p>
             <p>Command to delete: <code>rm public/run_migrations.php</code></p>
         </div>

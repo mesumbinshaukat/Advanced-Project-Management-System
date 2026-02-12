@@ -8,6 +8,9 @@
  * SECURITY: Delete this file after running!
  */
 
+// Set proper encoding
+header('Content-Type: text/html; charset=utf-8');
+
 // Error handling
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -104,7 +107,7 @@ $db_port = $env['database.default.port'] ?? 3306;
 </head>
 <body>
     <div class="container">
-        <h1>≡ƒöº Add Missing Database Columns</h1>
+        <h1>Add Missing Database Columns</h1>
         <p><strong>This script adds missing columns to your existing database.</strong></p>
         
         <?php
@@ -117,9 +120,9 @@ $db_port = $env['database.default.port'] ?? 3306;
                 throw new Exception('Connection failed: ' . $mysqli->connect_error);
             }
             $mysqli->set_charset('utf8mb4');
-            echo '<div class="success">Γ£ô Database connection successful!</div>';
+            echo '<div class="success">Database connection successful!</div>';
         } catch (Exception $e) {
-            echo '<div class="error">Γ£ù Database connection failed!</div>';
+            echo '<div class="error">Database connection failed!</div>';
             echo '<pre>' . htmlspecialchars($e->getMessage()) . '</pre>';
             die('</div></div></body></html>');
         }
@@ -155,46 +158,107 @@ $db_port = $env['database.default.port'] ?? 3306;
         
         // Define all columns that should exist based on code usage
         $requiredColumns = [
+            // Tasks table - CRITICAL COLUMNS
+            ['table' => 'tasks', 'column' => 'is_blocked', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `is_blocked` TINYINT(1) NOT NULL DEFAULT 0 AFTER `status`"],
+            ['table' => 'tasks', 'column' => 'blocker_reason', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `blocker_reason` TEXT NULL AFTER `is_blocked`"],
+            ['table' => 'tasks', 'column' => 'tags', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `tags` VARCHAR(255) NULL AFTER `description`"],
+            ['table' => 'tasks', 'column' => 'order_position', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `order_position` INT(11) NOT NULL DEFAULT 0 AFTER `completed_at`"],
+            
+            // Projects table - CRITICAL COLUMNS
+            ['table' => 'projects', 'column' => 'documentation', 'sql' => "ALTER TABLE `projects` ADD COLUMN `documentation` TEXT NULL AFTER `description`"],
+            ['table' => 'projects', 'column' => 'repository_url', 'sql' => "ALTER TABLE `projects` ADD COLUMN `repository_url` VARCHAR(255) NULL AFTER `documentation`"],
+            ['table' => 'projects', 'column' => 'staging_url', 'sql' => "ALTER TABLE `projects` ADD COLUMN `staging_url` VARCHAR(255) NULL AFTER `repository_url`"],
+            ['table' => 'projects', 'column' => 'production_url', 'sql' => "ALTER TABLE `projects` ADD COLUMN `production_url` VARCHAR(255) NULL AFTER `staging_url`"],
+            ['table' => 'projects', 'column' => 'health_status', 'sql' => "ALTER TABLE `projects` ADD COLUMN `health_status` ENUM('healthy', 'warning', 'critical') DEFAULT 'healthy' AFTER `status`"],
+            
+            // Clients table
             ['table' => 'clients', 'column' => 'company', 'sql' => "ALTER TABLE `clients` ADD COLUMN `company` VARCHAR(255) NULL AFTER `phone`"],
             ['table' => 'clients', 'column' => 'notes', 'sql' => "ALTER TABLE `clients` ADD COLUMN `notes` TEXT NULL AFTER `address`"],
             ['table' => 'clients', 'column' => 'is_active', 'sql' => "ALTER TABLE `clients` ADD COLUMN `is_active` TINYINT(1) NOT NULL DEFAULT 1 AFTER `notes`"],
-            ['table' => 'tasks', 'column' => 'start_date', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `start_date` DATE NULL AFTER `deadline`"],
-            ['table' => 'tasks', 'column' => 'actual_hours', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `actual_hours` DECIMAL(5,2) NULL DEFAULT 0 AFTER `estimated_hours`"],
-            ['table' => 'tasks', 'column' => 'completed_at', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `completed_at` DATETIME NULL AFTER `actual_hours`"],
-            ['table' => 'tasks', 'column' => 'order_position', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `order_position` INT(11) NULL DEFAULT 0 AFTER `completed_at`"],
+            
+            // Time entries - CRITICAL COLUMNS
+            ['table' => 'time_entries', 'column' => 'deleted_at', 'sql' => "ALTER TABLE `time_entries` ADD COLUMN `deleted_at` DATETIME NULL AFTER `updated_at`"],
             ['table' => 'time_entries', 'column' => 'is_billable', 'sql' => "ALTER TABLE `time_entries` ADD COLUMN `is_billable` TINYINT(1) NOT NULL DEFAULT 1 AFTER `description`"],
+            
+            // Users/Performance columns
             ['table' => 'users', 'column' => 'performance_score', 'sql' => "ALTER TABLE `users` ADD COLUMN `performance_score` DECIMAL(5,2) NULL DEFAULT 50 AFTER `deleted_at`"],
             ['table' => 'users', 'column' => 'deadline_score', 'sql' => "ALTER TABLE `users` ADD COLUMN `deadline_score` DECIMAL(5,2) NULL DEFAULT 50 AFTER `performance_score`"],
             ['table' => 'users', 'column' => 'speed_score', 'sql' => "ALTER TABLE `users` ADD COLUMN `speed_score` DECIMAL(5,2) NULL DEFAULT 50 AFTER `deadline_score`"],
             ['table' => 'users', 'column' => 'engagement_score', 'sql' => "ALTER TABLE `users` ADD COLUMN `engagement_score` DECIMAL(5,2) NULL DEFAULT 50 AFTER `speed_score`"],
             ['table' => 'users', 'column' => 'last_check_in', 'sql' => "ALTER TABLE `users` ADD COLUMN `last_check_in` DATETIME NULL AFTER `engagement_score`"],
+            
+            // Alerts
             ['table' => 'alerts', 'column' => 'user_id', 'sql' => "ALTER TABLE `alerts` ADD COLUMN `user_id` INT(11) UNSIGNED NULL AFTER `id`"],
+            
+            // Soft delete columns for other tables
+            ['table' => 'messages', 'column' => 'deleted_at', 'sql' => "ALTER TABLE `messages` ADD COLUMN `deleted_at` DATETIME NULL AFTER `updated_at`"],
+            ['table' => 'notes', 'column' => 'deleted_at', 'sql' => "ALTER TABLE `notes` ADD COLUMN `deleted_at` DATETIME NULL AFTER `updated_at`"],
         ];
         
         $added = 0;
         $skipped = 0;
+        
+        // First, create the financials table if it doesn't exist
+        echo '<div class="info">Checking for financials table...</div>';
+        $tableCheck = $mysqli->query("SHOW TABLES LIKE 'financials'");
+        if (!$tableCheck || $tableCheck->num_rows === 0) {
+            echo '<div class="info">Creating financials table...</div>';
+            $createFinancials = "CREATE TABLE IF NOT EXISTS `financials` (
+                `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `project_id` INT(11) UNSIGNED NOT NULL,
+                `hourly_rate` DECIMAL(10,2) NULL,
+                `fixed_price` DECIMAL(10,2) NULL,
+                `total_cost` DECIMAL(10,2) NOT NULL DEFAULT 0,
+                `total_revenue` DECIMAL(10,2) NOT NULL DEFAULT 0,
+                `profit_margin` DECIMAL(5,2) NOT NULL DEFAULT 0,
+                `billing_type` ENUM('hourly','fixed','retainer') NOT NULL DEFAULT 'hourly',
+                `currency` VARCHAR(10) NOT NULL DEFAULT 'USD',
+                `created_at` DATETIME NULL,
+                `updated_at` DATETIME NULL,
+                PRIMARY KEY (`id`),
+                KEY `project_id` (`project_id`),
+                CONSTRAINT `financials_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+            
+            if ($mysqli->query($createFinancials)) {
+                echo '<div class="success">Created financials table</div>';
+                $added++;
+            } else {
+                echo '<div class="error">Error creating financials table: ' . htmlspecialchars($mysqli->error) . '</div>';
+            }
+        } else {
+            echo '<div class="info">Financials table already exists</div>';
+            $skipped++;
+        }
         
         foreach ($requiredColumns as $col) {
             $table = $col['table'];
             $column = $col['column'];
             $sql = $col['sql'];
             
+            // Check if table exists first
+            $tableExists = $mysqli->query("SHOW TABLES LIKE '$table'");
+            if (!$tableExists || $tableExists->num_rows === 0) {
+                echo '<div class="warning">Table does not exist: ' . htmlspecialchars($table) . '. Skipping column ' . htmlspecialchars($column) . '</div>';
+                continue;
+            }
+            
             // Check if column exists in the specific table
             $checkResult = $mysqli->query("DESCRIBE `$table` `$column`");
             
             if ($checkResult && $checkResult->num_rows > 0) {
-                echo '<div class="info">Γèÿ Column already exists: ' . $table . '.' . $column . '</div>';
+                echo '<div class="info">Column already exists: ' . $table . '.' . $column . '</div>';
                 $skipped++;
             } else {
                 try {
                     if ($mysqli->query($sql)) {
-                        echo '<div class="success">Γ£ô Added column: ' . $table . '.' . $column . '</div>';
+                        echo '<div class="success">Added column: ' . $table . '.' . $column . '</div>';
                         $added++;
                     } else {
                         throw new Exception($mysqli->error);
                     }
                 } catch (Exception $e) {
-                    echo '<div class="error">Γ£ù Error adding column ' . $table . '.' . $column . ': ' . htmlspecialchars($e->getMessage()) . '</div>';
+                    echo '<div class="error">Error adding column ' . $table . '.' . $column . ': ' . htmlspecialchars($e->getMessage()) . '</div>';
                 }
             }
         }
@@ -202,7 +266,7 @@ $db_port = $env['database.default.port'] ?? 3306;
         if ($added === 0 && $skipped === 0) {
             echo '<div class="info">Γä╣ No columns needed to be added</div>';
         } else {
-            echo '<div class="success">Γ£ô Added ' . $added . ' column(s), skipped ' . $skipped . ' existing column(s)</div>';
+            echo '<div class="success">Added ' . $added . ' column(s), skipped ' . $skipped . ' existing column(s)</div>';
         }
         echo '</div>';
 
@@ -210,7 +274,7 @@ $db_port = $env['database.default.port'] ?? 3306;
         ?>
 
         <div class="success">
-            <h3>Γ£à Column Update Complete!</h3>
+            <h3>Column Update Complete!</h3>
             <p><strong>Next Steps:</strong></p>
             <ol>
                 <li><strong>DELETE THIS FILE:</strong> <code>public/add_missing_columns.php</code></li>
@@ -219,7 +283,7 @@ $db_port = $env['database.default.port'] ?? 3306;
         </div>
 
         <div class="warning">
-            <h3>ΓÜá∩╕Å SECURITY WARNING</h3>
+            <h3>SECURITY WARNING</h3>
             <p>Delete this file immediately after running!</p>
             <p>Command: <code>rm public/add_missing_columns.php</code></p>
         </div>
