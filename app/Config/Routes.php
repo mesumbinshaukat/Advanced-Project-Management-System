@@ -6,7 +6,14 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 
-service('auth')->routes($routes);
+// Register Shield auth routes but disable public registration
+$authRoutes = service('auth')->routes($routes);
+
+// Remove the register route to prevent public registration
+// Only admins can create users through the admin panel
+$routes->match(['GET', 'POST'], 'register', static function() {
+    return redirect()->to('login')->with('error', 'User registration is disabled. Contact an administrator to create an account.');
+});
 
 $routes->get('/', 'Home::index');
 
@@ -22,6 +29,7 @@ $routes->group('', ['filter' => 'session'], function($routes) {
     
     $routes->group('tasks', ['filter' => 'permission:tasks.view.assigned,tasks.view.all'], function($routes) {
         $routes->get('/', 'TasksController::index');
+        $routes->get('view/(:num)', 'TasksController::view/$1');
         $routes->get('kanban/(:num)', 'TasksController::kanban/$1');
         $routes->get('create', 'TasksController::create', ['filter' => 'permission:tasks.create']);
         $routes->get('create/(:num)', 'TasksController::create/$1', ['filter' => 'permission:tasks.create']);
@@ -58,6 +66,15 @@ $routes->group('', ['filter' => 'session'], function($routes) {
     $routes->group('developers', ['filter' => 'role:admin'], function($routes) {
         $routes->get('/', 'DevelopersController::index');
         $routes->get('workload/(:num)', 'DevelopersController::workload/$1');
+    });
+    
+    $routes->group('users', ['filter' => 'role:admin'], function($routes) {
+        $routes->get('/', 'UsersController::index');
+        $routes->get('create', 'UsersController::create');
+        $routes->post('store', 'UsersController::store');
+        $routes->get('edit/(:num)', 'UsersController::edit/$1');
+        $routes->post('update/(:num)', 'UsersController::update/$1');
+        $routes->get('delete/(:num)', 'UsersController::delete/$1');
     });
     
     $routes->group('check-in', function($routes) {

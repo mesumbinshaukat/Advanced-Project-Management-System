@@ -33,7 +33,8 @@ class TaskTemplateModel extends Model
 
     protected $beforeInsert = ['encodeChecklist'];
     protected $beforeUpdate = ['encodeChecklist'];
-    protected $afterFind = ['decodeChecklist'];
+    // Note: afterFind callback disabled - decoding handled in controller
+    // protected $afterFind = ['decodeChecklist'];
 
     protected function encodeChecklist(array $data)
     {
@@ -45,19 +46,28 @@ class TaskTemplateModel extends Model
 
     protected function decodeChecklist(array $data)
     {
-        if (isset($data['data'])) {
-            if (is_array($data['data'])) {
-                foreach ($data['data'] as &$row) {
-                    if (isset($row['checklist_items']) && is_string($row['checklist_items'])) {
-                        $row['checklist_items'] = json_decode($row['checklist_items'], true);
-                    }
-                }
-            } else {
-                if (isset($data['data']['checklist_items']) && is_string($data['data']['checklist_items'])) {
-                    $data['data']['checklist_items'] = json_decode($data['data']['checklist_items'], true);
+        if (!isset($data['data'])) {
+            return $data;
+        }
+
+        // Handle multiple rows (findAll returns array of rows)
+        if (is_array($data['data']) && !empty($data['data']) && !isset($data['data']['id'])) {
+            foreach ($data['data'] as &$row) {
+                if (is_array($row) && isset($row['checklist_items']) && is_string($row['checklist_items'])) {
+                    $decoded = json_decode($row['checklist_items'], true);
+                    $row['checklist_items'] = is_array($decoded) ? $decoded : [];
                 }
             }
+            unset($row);
         }
+        // Handle single row (find, first returns single array with 'id' key)
+        elseif (is_array($data['data']) && isset($data['data']['id'])) {
+            if (isset($data['data']['checklist_items']) && is_string($data['data']['checklist_items'])) {
+                $decoded = json_decode($data['data']['checklist_items'], true);
+                $data['data']['checklist_items'] = is_array($decoded) ? $decoded : [];
+            }
+        }
+        
         return $data;
     }
 

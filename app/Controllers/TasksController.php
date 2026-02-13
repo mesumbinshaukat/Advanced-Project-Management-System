@@ -93,6 +93,39 @@ class TasksController extends BaseController
         return view('tasks/create', $data);
     }
 
+    public function view($id)
+    {
+        $user = auth()->user();
+        $isAdmin = $user->inGroup('admin');
+        
+        $taskModel = new TaskModel();
+        $task = $taskModel->find($id);
+        
+        if (!$task) {
+            return redirect()->to('/tasks')->with('error', 'Task not found');
+        }
+
+        // Check if user has access to this task
+        if (!$isAdmin) {
+            $projectUserModel = new ProjectUserModel();
+            if (!$projectUserModel->isUserAssignedToProject($task['project_id'], $user->id)) {
+                return redirect()->to('/tasks')->with('error', 'You do not have access to this task');
+            }
+        }
+
+        $projectModel = new ProjectModel();
+        $project = $projectModel->find($task['project_id']);
+        
+        $data = [
+            'title' => $task['title'],
+            'task' => $task,
+            'project' => $project,
+            'isAdmin' => $isAdmin,
+        ];
+
+        return view('tasks/view', $data);
+    }
+
     public function edit($id)
     {
         $user = auth()->user();

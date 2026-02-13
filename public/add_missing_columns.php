@@ -181,6 +181,8 @@ $db_port = $env['database.default.port'] ?? 3306;
             ['table' => 'time_entries', 'column' => 'is_billable', 'sql' => "ALTER TABLE `time_entries` ADD COLUMN `is_billable` TINYINT(1) NOT NULL DEFAULT 1 AFTER `description`"],
             
             // Users/Performance columns
+            ['table' => 'users', 'column' => 'email', 'sql' => "ALTER TABLE `users` ADD COLUMN `email` VARCHAR(255) NULL UNIQUE AFTER `username`"],
+            ['table' => 'users', 'column' => 'password_hash', 'sql' => "ALTER TABLE `users` ADD COLUMN `password_hash` VARCHAR(255) NULL AFTER `email`"],
             ['table' => 'users', 'column' => 'performance_score', 'sql' => "ALTER TABLE `users` ADD COLUMN `performance_score` DECIMAL(5,2) NULL DEFAULT 50 AFTER `deleted_at`"],
             ['table' => 'users', 'column' => 'deadline_score', 'sql' => "ALTER TABLE `users` ADD COLUMN `deadline_score` DECIMAL(5,2) NULL DEFAULT 50 AFTER `performance_score`"],
             ['table' => 'users', 'column' => 'speed_score', 'sql' => "ALTER TABLE `users` ADD COLUMN `speed_score` DECIMAL(5,2) NULL DEFAULT 50 AFTER `deadline_score`"],
@@ -190,15 +192,41 @@ $db_port = $env['database.default.port'] ?? 3306;
             // Alerts
             ['table' => 'alerts', 'column' => 'user_id', 'sql' => "ALTER TABLE `alerts` ADD COLUMN `user_id` INT(11) UNSIGNED NULL AFTER `id`"],
             
+            // Messages table - CRITICAL COLUMN
+            ['table' => 'messages', 'column' => 'message', 'sql' => "ALTER TABLE `messages` ADD COLUMN `message` TEXT NULL AFTER `parent_id`"],
+            
+            // Notes table - missing columns
+            ['table' => 'notes', 'column' => 'title', 'sql' => "ALTER TABLE `notes` ADD COLUMN `title` VARCHAR(255) NULL AFTER `task_id`"],
+            ['table' => 'notes', 'column' => 'type', 'sql' => "ALTER TABLE `notes` ADD COLUMN `type` ENUM('note','decision','blocker','update') DEFAULT 'note' AFTER `content`"],
+            ['table' => 'notes', 'column' => 'is_pinned', 'sql' => "ALTER TABLE `notes` ADD COLUMN `is_pinned` TINYINT(1) DEFAULT 0 AFTER `type`"],
+            
             // Soft delete columns for other tables
             ['table' => 'messages', 'column' => 'deleted_at', 'sql' => "ALTER TABLE `messages` ADD COLUMN `deleted_at` DATETIME NULL AFTER `updated_at`"],
             ['table' => 'notes', 'column' => 'deleted_at', 'sql' => "ALTER TABLE `notes` ADD COLUMN `deleted_at` DATETIME NULL AFTER `updated_at`"],
+            ['table' => 'project_templates', 'column' => 'deleted_at', 'sql' => "ALTER TABLE `project_templates` ADD COLUMN `deleted_at` DATETIME NULL AFTER `updated_at`"],
+            
+            // Activity logs - CRITICAL COLUMNS
+            ['table' => 'activity_logs', 'column' => 'description', 'sql' => "ALTER TABLE `activity_logs` ADD COLUMN `description` TEXT NULL AFTER `action`"],
+            ['table' => 'activity_logs', 'column' => 'ip_address', 'sql' => "ALTER TABLE `activity_logs` ADD COLUMN `ip_address` VARCHAR(45) NULL AFTER `new_values`"],
+            ['table' => 'activity_logs', 'column' => 'user_agent', 'sql' => "ALTER TABLE `activity_logs` ADD COLUMN `user_agent` TEXT NULL AFTER `ip_address`"],
+            
+            // Task templates - soft delete
+            ['table' => 'task_templates', 'column' => 'deleted_at', 'sql' => "ALTER TABLE `task_templates` ADD COLUMN `deleted_at` DATETIME NULL AFTER `updated_at`"],
+            
+            // Project templates - missing columns
+            ['table' => 'project_templates', 'column' => 'estimated_duration_days', 'sql' => "ALTER TABLE `project_templates` ADD COLUMN `estimated_duration_days` INT(11) NULL AFTER `default_priority`"],
+            
+            // Project users - missing columns
+            ['table' => 'project_users', 'column' => 'assigned_at', 'sql' => "ALTER TABLE `project_users` ADD COLUMN `assigned_at` DATETIME NULL AFTER `role`"],
         ];
         
         $added = 0;
         $skipped = 0;
         
-        // First, create the financials table if it doesn't exist
+        // First, create missing tables
+        echo '<div class="info">Checking for required tables...</div>';
+        
+        // Create financials table if it doesn't exist
         echo '<div class="info">Checking for financials table...</div>';
         $tableCheck = $mysqli->query("SHOW TABLES LIKE 'financials'");
         if (!$tableCheck || $tableCheck->num_rows === 0) {
@@ -228,6 +256,40 @@ $db_port = $env['database.default.port'] ?? 3306;
             }
         } else {
             echo '<div class="info">Financials table already exists</div>';
+            $skipped++;
+        }
+        
+        // Create daily_check_ins table if it doesn't exist
+        echo '<div class="info">Checking for daily_check_ins table...</div>';
+        $tableCheck = $mysqli->query("SHOW TABLES LIKE 'daily_check_ins'");
+        if (!$tableCheck || $tableCheck->num_rows === 0) {
+            echo '<div class="info">Creating daily_check_ins table...</div>';
+            $createCheckIns = "CREATE TABLE IF NOT EXISTS `daily_check_ins` (
+                `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `user_id` INT(11) UNSIGNED NOT NULL,
+                `check_in_date` DATE NOT NULL,
+                `mood` VARCHAR(50) NULL,
+                `achievements` TEXT NULL,
+                `plans` TEXT NULL,
+                `blockers` TEXT NULL,
+                `notes` TEXT NULL,
+                `created_at` DATETIME NULL,
+                `updated_at` DATETIME NULL,
+                PRIMARY KEY (`id`),
+                KEY `user_id` (`user_id`),
+                KEY `check_in_date` (`check_in_date`),
+                UNIQUE KEY `unique_user_date` (`user_id`, `check_in_date`),
+                CONSTRAINT `daily_check_ins_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+            
+            if ($mysqli->query($createCheckIns)) {
+                echo '<div class="success">Created daily_check_ins table</div>';
+                $added++;
+            } else {
+                echo '<div class="error">Error creating daily_check_ins table: ' . htmlspecialchars($mysqli->error) . '</div>';
+            }
+        } else {
+            echo '<div class="info">Daily check-ins table already exists</div>';
             $skipped++;
         }
         
@@ -268,6 +330,187 @@ $db_port = $env['database.default.port'] ?? 3306;
         } else {
             echo '<div class="success">Added ' . $added . ' column(s), skipped ' . $skipped . ' existing column(s)</div>';
         }
+        echo '</div>';
+
+        // Check and fix admin user authentication
+        echo '<div class="section">';
+        echo '<h2>Admin User Authentication Check</h2>';
+        
+        // Check if Shield tables exist
+        $authGroupsExists = $mysqli->query("SHOW TABLES LIKE 'auth_groups'");
+        $authGroupsUsersExists = $mysqli->query("SHOW TABLES LIKE 'auth_groups_users'");
+        $authIdentitiesExists = $mysqli->query("SHOW TABLES LIKE 'auth_identities'");
+        
+        // Create Shield tables if they don't exist
+        if (!$authIdentitiesExists || $authIdentitiesExists->num_rows === 0) {
+            echo '<div class="warning">Creating missing Shield auth_identities table...</div>';
+            $createIdentities = "CREATE TABLE IF NOT EXISTS `auth_identities` (
+                `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `user_id` INT(11) UNSIGNED NOT NULL,
+                `type` VARCHAR(255) NOT NULL,
+                `secret` TEXT NOT NULL,
+                `secret2` TEXT NULL,
+                `expires` DATETIME NULL,
+                `extra` TEXT NULL,
+                `force_reset` TINYINT(1) DEFAULT 0,
+                `last_used_at` DATETIME NULL,
+                `created_at` DATETIME NULL,
+                `updated_at` DATETIME NULL,
+                PRIMARY KEY (`id`),
+                KEY `user_id` (`user_id`),
+                KEY `user_id_type` (`user_id`, `type`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+            if ($mysqli->query($createIdentities)) {
+                echo '<div class="success">Created auth_identities table</div>';
+            } else {
+                echo '<div class="error">Failed to create auth_identities: ' . htmlspecialchars($mysqli->error) . '</div>';
+            }
+        }
+        
+        if (!$authGroupsExists || $authGroupsExists->num_rows === 0) {
+            echo '<div class="warning">Creating missing Shield auth_groups table...</div>';
+            $createGroups = "CREATE TABLE IF NOT EXISTS `auth_groups` (
+                `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `title` VARCHAR(255) NOT NULL,
+                `description` TEXT NULL,
+                `name` VARCHAR(255) NOT NULL UNIQUE,
+                `created_at` DATETIME NULL,
+                `updated_at` DATETIME NULL,
+                PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+            if ($mysqli->query($createGroups)) {
+                echo '<div class="success">Created auth_groups table</div>';
+                
+                // Insert default groups
+                $mysqli->query("INSERT INTO `auth_groups` (`title`, `description`, `name`, `created_at`) VALUES ('Admin', 'Administrator group with full system access', 'admin', NOW())");
+                $mysqli->query("INSERT INTO `auth_groups` (`title`, `description`, `name`, `created_at`) VALUES ('Developer', 'Developer group with limited access', 'developer', NOW())");
+                echo '<div class="success">Created default admin and developer groups</div>';
+            } else {
+                echo '<div class="error">Failed to create auth_groups: ' . htmlspecialchars($mysqli->error) . '</div>';
+            }
+        }
+        
+        if (!$authGroupsUsersExists || $authGroupsUsersExists->num_rows === 0) {
+            echo '<div class="warning">Creating missing Shield auth_groups_users table...</div>';
+            $createGroupsUsers = "CREATE TABLE IF NOT EXISTS `auth_groups_users` (
+                `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `user_id` INT(11) UNSIGNED NOT NULL,
+                `group_id` INT(11) UNSIGNED NOT NULL,
+                `created_at` DATETIME NULL,
+                PRIMARY KEY (`id`),
+                KEY `user_id_group_id` (`user_id`, `group_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+            if ($mysqli->query($createGroupsUsers)) {
+                echo '<div class="success">Created auth_groups_users table</div>';
+            } else {
+                echo '<div class="error">Failed to create auth_groups_users: ' . htmlspecialchars($mysqli->error) . '</div>';
+            }
+        } else {
+            // Table exists, check if group_id column exists
+            $columnCheck = $mysqli->query("DESCRIBE `auth_groups_users` `group_id`");
+            if (!$columnCheck || $columnCheck->num_rows === 0) {
+                echo '<div class="warning">Adding missing group_id column to auth_groups_users table...</div>';
+                $addColumn = "ALTER TABLE `auth_groups_users` ADD COLUMN `group_id` INT(11) UNSIGNED NOT NULL AFTER `user_id`";
+                if ($mysqli->query($addColumn)) {
+                    echo '<div class="success">Added group_id column to auth_groups_users</div>';
+                } else {
+                    echo '<div class="error">Failed to add group_id column: ' . htmlspecialchars($mysqli->error) . '</div>';
+                }
+            }
+        }
+        
+        // Re-check if tables now exist
+        $authGroupsExists = $mysqli->query("SHOW TABLES LIKE 'auth_groups'");
+        $authGroupsUsersExists = $mysqli->query("SHOW TABLES LIKE 'auth_groups_users'");
+        
+        if (!$authGroupsExists || $authGroupsExists->num_rows === 0 || !$authGroupsUsersExists || $authGroupsUsersExists->num_rows === 0) {
+            echo '<div class="error">Shield tables could not be created. Please run CodeIgniter migrations manually.</div>';
+        } else {
+            // Check if admin user exists
+            $adminResult = $mysqli->query("SELECT id, username FROM users WHERE username = 'admin' LIMIT 1");
+            if ($adminResult && $adminResult->num_rows > 0) {
+                $admin = $adminResult->fetch_assoc();
+                $adminId = $admin['id'];
+                echo '<div class="info">Found admin user: ' . htmlspecialchars($admin['username']) . ' (ID: ' . $adminId . ')</div>';
+                
+                // Check if admin has email identity
+                $identityResult = $mysqli->query("SELECT id FROM auth_identities WHERE user_id = {$adminId} AND type = 'email_password' LIMIT 1");
+                
+                if (!$identityResult || $identityResult->num_rows === 0) {
+                    echo '<div class="warning">Admin user has no email identity! Attempting to fix...</div>';
+                    
+                    // Get admin email from auth_identities if it exists with different type
+                    $emailResult = $mysqli->query("SELECT secret FROM auth_identities WHERE user_id = {$adminId} LIMIT 1");
+                    if ($emailResult && $emailResult->num_rows > 0) {
+                        $emailRow = $emailResult->fetch_assoc();
+                        $adminEmail = $emailRow['secret'];
+                        
+                        // Create email_password identity
+                        $insertSql = "INSERT INTO auth_identities (user_id, type, secret, created_at) VALUES ({$adminId}, 'email_password', '" . $mysqli->real_escape_string($adminEmail) . "', NOW())";
+                        if ($mysqli->query($insertSql)) {
+                            echo '<div class="success">Created email identity for admin user</div>';
+                        } else {
+                            echo '<div class="error">Failed to create email identity: ' . htmlspecialchars($mysqli->error) . '</div>';
+                        }
+                    } else {
+                        echo '<div class="error">Could not find email for admin user. Please manually set the email identity.</div>';
+                    }
+                } else {
+                    echo '<div class="success">Admin user has valid email identity</div>';
+                }
+                
+                // Check if admin is in admin group
+                $groupResult = $mysqli->query("SELECT agu.id FROM auth_groups_users agu JOIN auth_groups g ON g.id = agu.group_id WHERE agu.user_id = {$adminId} AND g.name = 'admin' LIMIT 1");
+                
+                if (!$groupResult || $groupResult->num_rows === 0) {
+                    echo '<div class="warning">Admin user not in admin group! Attempting to fix...</div>';
+                    
+                    // Get admin group id
+                    $adminGroupResult = $mysqli->query("SELECT id FROM auth_groups WHERE name = 'admin' LIMIT 1");
+                    if ($adminGroupResult && $adminGroupResult->num_rows > 0) {
+                        $adminGroup = $adminGroupResult->fetch_assoc();
+                        $adminGroupId = $adminGroup['id'];
+                        
+                        // Add user to admin group
+                        $insertGroupSql = "INSERT INTO auth_groups_users (user_id, group_id) VALUES ({$adminId}, {$adminGroupId})";
+                        if ($mysqli->query($insertGroupSql)) {
+                            echo '<div class="success">Added admin user to admin group</div>';
+                        } else {
+                            echo '<div class="error">Failed to add admin user to group: ' . htmlspecialchars($mysqli->error) . '</div>';
+                        }
+                    } else {
+                        echo '<div class="error">Admin group not found in database</div>';
+                    }
+                } else {
+                    echo '<div class="success">Admin user is in admin group</div>';
+                }
+                
+                // Check password hash
+                $passwordCheck = $mysqli->query("SELECT password_hash FROM users WHERE id = {$adminId}");
+                if ($passwordCheck && $passwordCheck->num_rows > 0) {
+                    $pwRow = $passwordCheck->fetch_assoc();
+                    if (empty($pwRow['password_hash'])) {
+                        echo '<div class="error">Admin user has no password hash! Setting default password...</div>';
+                        // Set a default password: admin123456
+                        $defaultPassword = password_hash('admin123456', PASSWORD_BCRYPT);
+                        $updatePwSql = "UPDATE users SET password_hash = '" . $mysqli->real_escape_string($defaultPassword) . "' WHERE id = {$adminId}";
+                        if ($mysqli->query($updatePwSql)) {
+                            echo '<div class="success">Set admin password to: admin123456 (CHANGE THIS IMMEDIATELY!)</div>';
+                            echo '<div class="warning"><strong>SECURITY WARNING:</strong> Default password has been set. Please login and change it immediately!</div>';
+                        } else {
+                            echo '<div class="error">Failed to set password: ' . htmlspecialchars($mysqli->error) . '</div>';
+                        }
+                    } else {
+                        echo '<div class="success">Admin user has valid password hash</div>';
+                    }
+                } else {
+                    echo '<div class="error">Could not check admin password</div>';
+                }
+            } else {
+                echo '<div class="error">No admin user found in database!</div>';
+            }
+        }
+        
         echo '</div>';
 
         $mysqli->close();

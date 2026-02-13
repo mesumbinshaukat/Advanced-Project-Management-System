@@ -34,7 +34,8 @@ class ProjectTemplateModel extends Model
 
     protected $beforeInsert = ['encodeTaskTemplates'];
     protected $beforeUpdate = ['encodeTaskTemplates'];
-    protected $afterFind = ['decodeTaskTemplates'];
+    // Note: afterFind callback disabled - decoding handled in controller
+    // protected $afterFind = ['decodeTaskTemplates'];
 
     protected function encodeTaskTemplates(array $data)
     {
@@ -46,19 +47,28 @@ class ProjectTemplateModel extends Model
 
     protected function decodeTaskTemplates(array $data)
     {
-        if (isset($data['data'])) {
-            if (is_array($data['data'])) {
-                foreach ($data['data'] as &$row) {
-                    if (isset($row['task_templates']) && is_string($row['task_templates'])) {
-                        $row['task_templates'] = json_decode($row['task_templates'], true);
-                    }
-                }
-            } else {
-                if (isset($data['data']['task_templates']) && is_string($data['data']['task_templates'])) {
-                    $data['data']['task_templates'] = json_decode($data['data']['task_templates'], true);
+        if (!isset($data['data'])) {
+            return $data;
+        }
+
+        // Handle multiple rows (findAll returns array of rows)
+        if (is_array($data['data']) && !empty($data['data']) && !isset($data['data']['id'])) {
+            foreach ($data['data'] as &$row) {
+                if (is_array($row) && isset($row['task_templates']) && is_string($row['task_templates'])) {
+                    $decoded = json_decode($row['task_templates'], true);
+                    $row['task_templates'] = is_array($decoded) ? $decoded : [];
                 }
             }
+            unset($row);
+        } 
+        // Handle single row (find, first returns single array with 'id' key)
+        elseif (is_array($data['data']) && isset($data['data']['id'])) {
+            if (isset($data['data']['task_templates']) && is_string($data['data']['task_templates'])) {
+                $decoded = json_decode($data['data']['task_templates'], true);
+                $data['data']['task_templates'] = is_array($decoded) ? $decoded : [];
+            }
         }
+        
         return $data;
     }
 

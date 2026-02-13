@@ -40,16 +40,22 @@
                                 <p class="card-text text-muted small"><?= esc($template['description']) ?></p>
                                 <div class="mb-2">
                                     <span class="badge bg-secondary"><?= ucfirst($template['default_priority']) ?></span>
-                                    <?php if ($template['estimated_duration_days']): ?>
+                                    <?php if (!empty($template['estimated_duration_days'])): ?>
                                     <span class="badge bg-info"><?= $template['estimated_duration_days'] ?> days</span>
                                     <?php endif; ?>
-                                    <?php if ($template['default_budget']): ?>
+                                    <?php if (!empty($template['default_budget'])): ?>
                                     <span class="badge bg-success">$<?= number_format($template['default_budget'], 0) ?></span>
                                     <?php endif; ?>
                                 </div>
-                                <?php if (!empty($template['task_templates'])): ?>
+                                <?php 
+                                $taskTemplates = $template['task_templates'] ?? null;
+                                if (is_string($taskTemplates)) {
+                                    $taskTemplates = json_decode($taskTemplates, true);
+                                }
+                                if (!empty($taskTemplates) && is_array($taskTemplates)): 
+                                ?>
                                 <small class="text-muted">
-                                    <i class="bi bi-list-check"></i> <?= count($template['task_templates']) ?> tasks included
+                                    <i class="bi bi-list-check"></i> <?= count($taskTemplates) ?> tasks included
                                 </small>
                                 <?php endif; ?>
                             </div>
@@ -104,8 +110,14 @@
                                 </td>
                                 <td><?= $template['estimated_hours'] ?? '-' ?>h</td>
                                 <td>
-                                    <?php if (!empty($template['checklist_items'])): ?>
-                                    <span class="badge bg-info"><?= count($template['checklist_items']) ?> items</span>
+                                    <?php 
+                                    $checklistItems = $template['checklist_items'] ?? null;
+                                    if (is_string($checklistItems)) {
+                                        $checklistItems = json_decode($checklistItems, true);
+                                    }
+                                    if (!empty($checklistItems) && is_array($checklistItems)): 
+                                    ?>
+                                    <span class="badge bg-info"><?= count($checklistItems) ?> items</span>
                                     <?php else: ?>
                                     <span class="text-muted">-</span>
                                     <?php endif; ?>

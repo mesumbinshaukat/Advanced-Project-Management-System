@@ -37,8 +37,19 @@ class ProfitabilityController extends BaseController
             return redirect()->to('/dashboard')->with('error', 'Access denied');
         }
 
+        $projectModel = new \App\Models\ProjectModel();
+        $project = $projectModel->find($projectId);
+
+        if (!$project) {
+            return redirect()->to('/profitability')->with('error', 'Project not found');
+        }
+
         $profitability = $this->profitabilityService->getProjectProfitability($projectId);
 
-        return $this->response->setJSON($profitability);
+        return view('profitability/project', [
+            'title' => 'Profitability - ' . $project['name'],
+            'project' => $project,
+            'profitability' => $profitability,
+        ]);
     }
 }
