@@ -38,6 +38,12 @@ class ProjectsController extends BaseController
             return redirect()->to('/projects')->with('error', 'Project not found');
         }
 
+        $projectClient = null;
+        if (!empty($project['client_id'])) {
+            $clientModel = new ClientModel();
+            $projectClient = $clientModel->find($project['client_id']);
+        }
+
         if (!$isAdmin) {
             $projectUserModel = new ProjectUserModel();
             if (!$projectUserModel->isUserAssignedToProject($id, $user->id)) {
@@ -76,6 +82,7 @@ class ProjectsController extends BaseController
             'assigned_users' => $assignedUsers,
             'available_developers' => $availableDevelopers,
             'isAdmin' => $isAdmin,
+            'projectClient' => $projectClient,
         ];
 
         return view('projects/view', $data);

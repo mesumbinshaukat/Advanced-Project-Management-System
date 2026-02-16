@@ -17,9 +17,9 @@
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <label for="client_id" class="form-label">Client *</label>
-                            <select class="form-select" id="client_id" name="client_id" required>
-                                <option value="">Select client...</option>
+                            <label for="client_id" class="form-label">Client <span class="text-muted fw-normal">(optional)</span></label>
+                            <select class="form-select" id="client_id" name="client_id">
+                                <option value="">No client assigned</option>
                                 <?php foreach ($clients as $client): ?>
                                 <option value="<?= $client['id'] ?>" <?= $client['id'] == $project['client_id'] ? 'selected' : '' ?>>
                                     <?= esc($client['name']) ?>
@@ -66,16 +66,9 @@
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="budget" class="form-label">Budget</label>
-                            <input type="number" class="form-control" id="budget" name="budget" step="0.01" value="<?= $project['budget'] ?? '' ?>">
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="estimated_hours" class="form-label">Estimated Hours</label>
-                            <input type="number" class="form-control" id="estimated_hours" name="estimated_hours" step="0.5" value="<?= $project['estimated_hours'] ?? '' ?>">
-                        </div>
+                    <div class="mb-3">
+                        <label for="estimated_hours" class="form-label">Estimated Hours</label>
+                        <input type="number" class="form-control" id="estimated_hours" name="estimated_hours" step="0.5" value="<?= $project['estimated_hours'] ?? '' ?>">
                     </div>
 
                     <div class="mb-3">
@@ -106,7 +99,7 @@ document.getElementById('projectForm').addEventListener('submit', async (e) => {
     const data = Object.fromEntries(formData.entries());
     
     // Convert empty strings to null for optional fields
-    ['description', 'start_date', 'deadline', 'budget', 'estimated_hours', 'documentation_url'].forEach(field => {
+    ['client_id', 'description', 'start_date', 'deadline', 'estimated_hours', 'documentation_url'].forEach(field => {
         if (data[field] === '') data[field] = null;
     });
     

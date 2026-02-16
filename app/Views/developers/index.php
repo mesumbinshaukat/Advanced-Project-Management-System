@@ -2,10 +2,15 @@
 
 <?= $this->section('content') ?>
 
-<div class="row mb-4">
-    <div class="col-12">
+<div class="row mb-4 align-items-center">
+    <div class="col-md-8">
         <h2>Developer Management</h2>
-        <p class="text-muted">Monitor team workload and performance</p>
+        <p class="text-muted mb-0">Monitor team workload and performance</p>
+    </div>
+    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <a href="<?= base_url('users/create') ?>" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i> Add New User
+        </a>
     </div>
 </div>
 

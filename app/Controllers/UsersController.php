@@ -18,6 +18,7 @@ class UsersController extends BaseController
     {
         $users = $this->userModel
             ->select('users.*, auth_identities.secret as email')
+            ->asArray()
             ->join('auth_identities', 'auth_identities.user_id = users.id', 'left')
             ->where('auth_identities.type', 'email_password')
             ->findAll();
@@ -64,6 +65,7 @@ class UsersController extends BaseController
         
         // Assign default 'developer' role to new users
         $user = $this->userModel->find($userId);
+        $user->activate();
         $user->addGroup('developer');
 
         return redirect()->to('/users')->with('success', 'User created successfully');

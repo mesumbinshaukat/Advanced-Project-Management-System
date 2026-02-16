@@ -19,7 +19,6 @@ class ProjectModel extends Model
         'status',
         'start_date',
         'deadline',
-        'budget',
         'priority',
         'created_by'
     ];
@@ -37,7 +36,7 @@ class ProjectModel extends Model
     protected $deletedField = 'deleted_at';
 
     protected $validationRules = [
-        'client_id' => 'required|is_natural_no_zero',
+        'client_id' => 'permit_empty|is_natural_no_zero',
         'name' => 'required|min_length[3]|max_length[255]',
         'status' => 'permit_empty|in_list[active,on_hold,completed,archived]',
         'priority' => 'permit_empty|in_list[low,medium,high,urgent]',
@@ -60,12 +59,12 @@ class ProjectModel extends Model
     {
         if ($isAdmin) {
             return $this->select('projects.*, clients.name as client_name')
-                ->join('clients', 'clients.id = projects.client_id')
+                ->join('clients', 'clients.id = projects.client_id', 'left')
                 ->findAll();
         }
 
         return $this->select('projects.*, clients.name as client_name')
-            ->join('clients', 'clients.id = projects.client_id')
+            ->join('clients', 'clients.id = projects.client_id', 'left')
             ->join('project_users', 'project_users.project_id = projects.id')
             ->where('project_users.user_id', $userId)
             ->findAll();

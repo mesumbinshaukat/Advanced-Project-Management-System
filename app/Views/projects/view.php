@@ -58,6 +58,16 @@
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Client</label>
+                        <div>
+                            <?php if (!empty($project['client_id']) && !empty($projectClient)): ?>
+                                <?= esc($projectClient['name']) ?>
+                            <?php else: ?>
+                                <span class="text-muted">Unassigned</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
                         <label class="text-muted small">Start Date</label>
                         <div><?= $project['start_date'] ? date('M d, Y', strtotime($project['start_date'])) : '-' ?></div>
                     </div>
@@ -65,12 +75,6 @@
                         <label class="text-muted small">Deadline</label>
                         <div><?= $project['deadline'] ? date('M d, Y', strtotime($project['deadline'])) : '-' ?></div>
                     </div>
-                    <?php if ($project['budget']): ?>
-                    <div class="col-md-6 mb-3">
-                        <label class="text-muted small">Budget</label>
-                        <div>$<?= number_format($project['budget'], 2) ?></div>
-                    </div>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>

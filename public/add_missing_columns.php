@@ -332,6 +332,82 @@ $db_port = $env['database.default.port'] ?? 3306;
         }
         echo '</div>';
 
+        // Apply 2026-02-16-180000_UpdateProjectsClientAndBudget migration logic
+        echo '<div class="step">';
+        echo '<h3>Step 4: Applying migration 2026-02-16-180000_UpdateProjectsClientAndBudget</h3>';
+
+        $projectsTableExists = $mysqli->query("SHOW TABLES LIKE 'projects'");
+
+        if ($projectsTableExists && $projectsTableExists->num_rows > 0) {
+            try {
+                $mysqli->begin_transaction();
+
+                // Drop existing foreign key on client_id if present
+                $fkQuery = sprintf(
+                    "SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = '%s' AND TABLE_NAME = 'projects' AND COLUMN_NAME = 'client_id' AND REFERENCED_TABLE_NAME IS NOT NULL",
+                    $mysqli->real_escape_string($db_name)
+                );
+                $fkResult = $mysqli->query($fkQuery);
+                if ($fkResult && $fkResult->num_rows > 0) {
+                    while ($fkRow = $fkResult->fetch_assoc()) {
+                        if (!empty($fkRow['CONSTRAINT_NAME'])) {
+                            $constraintName = $fkRow['CONSTRAINT_NAME'];
+                            if (!$mysqli->query("ALTER TABLE `projects` DROP FOREIGN KEY `{$constraintName}`")) {
+                                throw new Exception('Failed to drop foreign key ' . $constraintName . ': ' . $mysqli->error);
+                            }
+                            echo '<div class="info">Dropped foreign key: ' . htmlspecialchars($constraintName) . '</div>';
+                            break;
+                        }
+                    }
+                }
+
+                // Allow client_id to be nullable
+                if (!$mysqli->query("ALTER TABLE `projects` MODIFY `client_id` INT(11) UNSIGNED NULL")) {
+                    throw new Exception('Failed to modify client_id column: ' . $mysqli->error);
+                }
+                echo '<div class="success">Updated client_id column to allow NULL values.</div>';
+
+                // Drop budget column if it exists
+                $budgetColumn = $mysqli->query("SHOW COLUMNS FROM `projects` LIKE 'budget'");
+                if ($budgetColumn && $budgetColumn->num_rows > 0) {
+                    if (!$mysqli->query("ALTER TABLE `projects` DROP COLUMN `budget`")) {
+                        throw new Exception('Failed to drop budget column: ' . $mysqli->error);
+                    }
+                    echo '<div class="success">Removed deprecated budget column.</div>';
+                } else {
+                    echo '<div class="info">Budget column already removed.</div>';
+                }
+
+                // Add new foreign key with SET NULL behavior if it does not already exist
+                $newConstraint = 'projects_client_id_foreign';
+                $fkExistsQuery = sprintf(
+                    "SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = '%s' AND TABLE_NAME = 'projects' AND CONSTRAINT_NAME = '%s' AND CONSTRAINT_TYPE = 'FOREIGN KEY'",
+                    $mysqli->real_escape_string($db_name),
+                    $mysqli->real_escape_string($newConstraint)
+                );
+                $fkExists = $mysqli->query($fkExistsQuery);
+                if (!$fkExists || $fkExists->num_rows === 0) {
+                    $addFkSql = "ALTER TABLE `projects` ADD CONSTRAINT `{$newConstraint}` FOREIGN KEY (`client_id`) REFERENCES `clients`(`id`) ON DELETE SET NULL ON UPDATE CASCADE";
+                    if (!$mysqli->query($addFkSql)) {
+                        throw new Exception('Failed to add new foreign key: ' . $mysqli->error);
+                    }
+                    echo '<div class="success">Added new client_id foreign key with SET NULL behavior.</div>';
+                } else {
+                    echo '<div class="info">Client_id foreign key already configured.</div>';
+                }
+
+                $mysqli->commit();
+                echo '<div class="success"><strong>Migration applied successfully.</strong></div>';
+            } catch (Exception $e) {
+                $mysqli->rollback();
+                echo '<div class="error">Migration failed: ' . htmlspecialchars($e->getMessage()) . '</div>';
+            }
+        } else {
+            echo '<div class="warning">Projects table not found. Skipping migration.</div>';
+        }
+
+        echo '</div>';
+
         // Check and fix admin user authentication
         echo '<div class="section">';
         echo '<h2>Admin User Authentication Check</h2>';

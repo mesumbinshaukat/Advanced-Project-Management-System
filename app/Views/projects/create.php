@@ -11,9 +11,9 @@
             <div class="card-body">
                 <form id="projectForm">
                     <div class="mb-3">
-                        <label for="client_id" class="form-label">Client *</label>
-                        <select class="form-select" id="client_id" name="client_id" required>
-                            <option value="">Select Client</option>
+                        <label for="client_id" class="form-label">Client <span class="text-muted fw-normal">(optional)</span></label>
+                        <select class="form-select" id="client_id" name="client_id">
+                            <option value="">No client assigned</option>
                             <?php foreach ($clients as $client): ?>
                             <option value="<?= $client['id'] ?>"><?= esc($client['name']) ?></option>
                             <?php endforeach; ?>
@@ -64,11 +64,6 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="budget" class="form-label">Budget</label>
-                        <input type="number" step="0.01" class="form-control" id="budget" name="budget">
-                    </div>
-
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-check-lg"></i> Create Project
@@ -90,6 +85,9 @@ document.getElementById('projectForm').addEventListener('submit', async (e) => {
     
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
+    ['client_id', 'description', 'start_date', 'deadline'].forEach(field => {
+        if (data[field] === '') data[field] = null;
+    });
     
     try {
         const response = await fetch('<?= base_url('api/projects') ?>', {

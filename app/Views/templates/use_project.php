@@ -31,9 +31,9 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="client_id" class="form-label">Client *</label>
-                        <select class="form-select" id="client_id" name="client_id" required>
-                            <option value="">Select a client</option>
+                        <label for="client_id" class="form-label">Client <span class="text-muted fw-normal">(optional)</span></label>
+                        <select class="form-select" id="client_id" name="client_id">
+                            <option value="">No client assigned</option>
                             <?php
                             $db = \Config\Database::connect();
                             $clients = $db->table('clients')->where('deleted_at', null)->get()->getResultArray();
@@ -61,9 +61,6 @@
                             <li>Priority: <strong><?= ucfirst($template['default_priority']) ?></strong></li>
                             <?php if (!empty($template['estimated_duration_days'])): ?>
                             <li>Estimated Duration: <strong><?= $template['estimated_duration_days'] ?> days</strong></li>
-                            <?php endif; ?>
-                            <?php if (!empty($template['default_budget'])): ?>
-                            <li>Budget: <strong>$<?= number_format($template['default_budget'], 2) ?></strong></li>
                             <?php endif; ?>
                             <?php 
                             $taskTemplates = $template['task_templates'];
@@ -111,13 +108,6 @@
                 <div class="mb-3">
                     <small class="text-muted">Estimated Duration</small>
                     <p class="mb-0"><?= $template['estimated_duration_days'] ?> days</p>
-                </div>
-                <?php endif; ?>
-
-                <?php if (!empty($template['default_budget'])): ?>
-                <div class="mb-3">
-                    <small class="text-muted">Default Budget</small>
-                    <p class="mb-0">$<?= number_format($template['default_budget'], 2) ?></p>
                 </div>
                 <?php endif; ?>
 

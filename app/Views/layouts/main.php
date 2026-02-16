@@ -272,6 +272,11 @@
                     <i class="bi bi-file-earmark-text"></i> Templates
                 </a>
             </li>
+            <li class="sidebar-nav-item">
+                <a href="<?= base_url('users') ?>" class="sidebar-nav-link <?= url_is('users*') ? 'active' : '' ?>">
+                    <i class="bi bi-people"></i> Users
+                </a>
+            </li>
             <?php endif; ?>
         </ul>
     </div>
