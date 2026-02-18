@@ -248,6 +248,11 @@
                 </a>
             </li>
             <li class="sidebar-nav-item">
+                <a href="<?= base_url('attendance') ?>" class="sidebar-nav-link <?= url_is('attendance*') ? 'active' : '' ?>">
+                    <i class="bi bi-calendar4-week"></i> Attendance
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
                 <a href="<?= base_url('developers') ?>" class="sidebar-nav-link <?= url_is('developers*') ? 'active' : '' ?>">
                     <i class="bi bi-person-badge"></i> Developers
                 </a>

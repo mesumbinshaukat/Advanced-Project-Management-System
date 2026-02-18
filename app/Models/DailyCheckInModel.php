@@ -78,4 +78,18 @@ class DailyCheckInModel extends Model
 
         return $streak;
     }
+
+    public function getCheckInsBetween(string $startDate, string $endDate, ?array $userIds = null): array
+    {
+        $builder = $this->select('daily_check_ins.user_id, daily_check_ins.check_in_date, daily_check_ins.mood')
+            ->where('check_in_date >=', $startDate)
+            ->where('check_in_date <=', $endDate)
+            ->orderBy('check_in_date', 'ASC');
+
+        if (!empty($userIds)) {
+            $builder->whereIn('user_id', $userIds);
+        }
+
+        return $builder->findAll();
+    }
 }

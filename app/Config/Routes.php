@@ -68,6 +68,8 @@ $routes->group('', ['filter' => 'session'], function($routes) {
         $routes->get('workload/(:num)', 'DevelopersController::workload/$1');
     });
     
+    $routes->get('attendance', 'AttendanceController::index', ['filter' => 'role:admin']);
+
     $routes->group('users', ['filter' => 'role:admin'], function($routes) {
         $routes->get('/', 'UsersController::index');
         $routes->get('create', 'UsersController::create');
