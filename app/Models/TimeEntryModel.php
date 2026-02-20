@@ -36,7 +36,7 @@ class TimeEntryModel extends Model
     protected $deletedField = 'deleted_at';
 
     protected $validationRules = [
-        'task_id' => 'required|is_natural_no_zero',
+        'task_id' => 'permit_empty|is_natural_no_zero',
         'user_id' => 'required|is_natural_no_zero',
         'hours' => 'required|decimal|greater_than[0]',
         'date' => 'required|valid_date',

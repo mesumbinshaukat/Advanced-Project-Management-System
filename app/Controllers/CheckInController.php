@@ -48,10 +48,15 @@ class CheckInController extends BaseController
         }
 
         $db = \Config\Database::connect();
-        $db->table('users')->where('id', $userId)->update([
+        $updateFields = [
             'last_check_in' => date('Y-m-d'),
-            'last_activity' => date('Y-m-d H:i:s'),
-        ]);
+        ];
+
+        if ($db->fieldExists('last_activity', 'users')) {
+            $updateFields['last_activity'] = date('Y-m-d H:i:s');
+        }
+
+        $db->table('users')->where('id', $userId)->update($updateFields);
 
         return redirect()->to('/check-in')->with('success', 'Check-in saved successfully');
     }

@@ -408,6 +408,65 @@ $db_port = $env['database.default.port'] ?? 3306;
 
         echo '</div>';
 
+        // Allow time entries to omit task references for general timers
+        echo '<div class="step">';
+        echo '<h3>Step 5: Allowing time_entries.task_id to be nullable</h3>';
+        $timeTableCheck = $mysqli->query("SHOW TABLES LIKE 'time_entries'");
+        if (!$timeTableCheck || $timeTableCheck->num_rows === 0) {
+            echo '<div class="warning">time_entries table missing, skipping task_id alteration.</div>';
+        } else {
+            $taskColumnCheck = $mysqli->query("SHOW COLUMNS FROM `time_entries` LIKE 'task_id'");
+            if ($taskColumnCheck && $taskColumnCheck->num_rows > 0) {
+                $columnInfo = $taskColumnCheck->fetch_assoc();
+                if (stripos($columnInfo['Null'], 'YES') === false) {
+                    if ($mysqli->query("ALTER TABLE `time_entries` MODIFY `task_id` INT(11) UNSIGNED NULL")) {
+                        echo '<div class="success">Made time_entries.task_id nullable.</div>';
+                    } else {
+                        echo '<div class="error">Failed to alter task_id: ' . htmlspecialchars($mysqli->error) . '</div>';
+                    }
+                } else {
+                    echo '<div class="info">time_entries.task_id already nullable.</div>';
+                }
+            } else {
+                echo '<div class="warning">task_id column missing in time_entries table.</div>';
+            }
+        }
+
+        echo '</div>';
+
+        // Ensure daily_check_ins has the latest required columns
+        echo '<div class="step">';
+        echo '<h3>Step 5: Applying migration 2026-02-20-090000_AddDailyCheckInFields</h3>';
+        $dailyColumns = [
+            ['column' => 'yesterday_accomplishments', 'sql' => "ALTER TABLE `daily_check_ins` ADD COLUMN `yesterday_accomplishments` TEXT NULL AFTER `mood`"],
+            ['column' => 'today_plan', 'sql' => "ALTER TABLE `daily_check_ins` ADD COLUMN `today_plan` TEXT NULL AFTER `yesterday_accomplishments`"],
+            ['column' => 'blockers', 'sql' => "ALTER TABLE `daily_check_ins` ADD COLUMN `blockers` TEXT NULL AFTER `today_plan`"],
+            ['column' => 'needs_help', 'sql' => "ALTER TABLE `daily_check_ins` ADD COLUMN `needs_help` TINYINT(1) DEFAULT 0 AFTER `blockers`"],
+            ['column' => 'last_activity', 'sql' => "ALTER TABLE `daily_check_ins` ADD COLUMN `last_activity` DATETIME NULL AFTER `needs_help`"],
+        ];
+
+        $dailyTableCheck = $mysqli->query("SHOW TABLES LIKE 'daily_check_ins'");
+        if (!$dailyTableCheck || $dailyTableCheck->num_rows === 0) {
+            echo '<div class="warning">Daily check-ins table missing, skipping field updates.</div>';
+        } else {
+            foreach ($dailyColumns as $col) {
+                $colName = $col['column'];
+                $colCheck = $mysqli->query("SHOW COLUMNS FROM `daily_check_ins` LIKE '{$colName}'");
+                if ($colCheck && $colCheck->num_rows > 0) {
+                    echo '<div class="info">Column already exists: daily_check_ins.' . htmlspecialchars($colName) . '</div>';
+                    continue;
+                }
+
+                if ($mysqli->query($col['sql'])) {
+                    echo '<div class="success">Added column: daily_check_ins.' . htmlspecialchars($colName) . '</div>';
+                } else {
+                    echo '<div class="error">Failed to add column daily_check_ins.' . htmlspecialchars($colName) . ': ' . htmlspecialchars($mysqli->error) . '</div>';
+                }
+            }
+        }
+
+        echo '</div>';
+
         // Check and fix admin user authentication
         echo '<div class="section">';
         echo '<h2>Admin User Authentication Check</h2>';

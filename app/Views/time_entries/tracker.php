@@ -9,6 +9,33 @@
     </div>
 </div>
 
+<?php if (!empty($is_admin) && !empty($users)): ?>
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex flex-wrap align-items-center gap-3">
+                <div>
+                    <strong>Viewing tracker for:</strong> <?= esc($selected_user_name) ?>
+                </div>
+                <form id="userFilterForm" class="d-flex align-items-center gap-2" method="get" action="<?= base_url('time/tracker') ?>">
+                    <label class="mb-0" for="userFilter">Select developer</label>
+                    <select id="userFilter" name="user" class="form-select form-select-sm" onchange="document.getElementById('userFilterForm').submit()">
+                        <?php foreach ($users as $user): ?>
+                        <option value="<?= $user['id'] ?>" <?= (int)$selected_user_id === (int)$user['id'] ? 'selected' : '' ?>>
+                            <?= esc($user['username']) ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </form>
+                <div class="text-muted">
+                    Admins can monitor any developer; switch to your own account to start or stop timers.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <div class="row mb-4">
     <div class="col-lg-6">
         <div class="card">
@@ -29,6 +56,7 @@
                         <?php endforeach; ?>
                         <?php endif; ?>
                     </select>
+                    <small class="form-text text-muted">Leave blank to track general work not tied to a task.</small>
                 </div>
                 
                 <div class="mb-3">
@@ -174,10 +202,9 @@ function updateTimerDisplay() {
 
 function startTimer() {
     const taskSelect = document.getElementById('timerTask');
-    if (!taskSelect.value) {
-        alert('Please select a task first');
-        return;
-    }
+    document.getElementById('startTimer').disabled = true;
+    document.getElementById('pauseTimer').disabled = false;
+    document.getElementById('stopTimer').disabled = false;
     
     timerRunning = true;
     timerStartTime = Date.now() - (timerSeconds * 1000);
@@ -187,9 +214,6 @@ function startTimer() {
         updateTimerDisplay();
     }, 1000);
     
-    document.getElementById('startTimer').disabled = true;
-    document.getElementById('pauseTimer').disabled = false;
-    document.getElementById('stopTimer').disabled = false;
     document.getElementById('timerTask').disabled = true;
     document.getElementById('timerStatus').innerHTML = '<span class="text-success"><i class="bi bi-circle-fill"></i> Timer running...</span>';
 }
@@ -213,7 +237,8 @@ async function stopTimer() {
         timerInterval = null;
     }
     
-    const taskId = document.getElementById('timerTask').value;
+    const selectedTask = document.getElementById('timerTask').value;
+    const taskId = selectedTask ? selectedTask : null;
     const description = document.getElementById('timerDescription').value || 'Timed work session';
     const hours = (timerSeconds / 3600).toFixed(2);
     
@@ -231,7 +256,7 @@ async function stopTimer() {
                 'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
-                task_id: taskId,
+                task_id: taskId === "" ? null : taskId,
                 date: new Date().toISOString().split('T')[0],
                 hours: parseFloat(hours),
                 description: description,
@@ -241,7 +266,7 @@ async function stopTimer() {
         
         if (response.ok) {
             alert(`Time entry saved: ${hours} hours`);
-            location.reload();
+            document.getElementById('timerStatus').innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Saved</span>';
         } else {
             const data = await response.json();
             alert('Failed to save: ' + (data.message || 'Unknown error'));
