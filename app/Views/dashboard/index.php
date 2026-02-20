@@ -20,74 +20,90 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span><i class="bi bi-heart-pulse"></i> Project Health Overview</span>
-                    <a href="<?= base_url('projects/create') ?>" class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-lg"></i> New Project
-                    </a>
-                </div>
-                <div class="card-body">
-                    <?php if (empty($project_health)): ?>
-                    <p class="text-muted text-center py-4">No active projects</p>
-                    <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Project</th>
-                                    <th>Health</th>
-                                    <th>Progress</th>
-                                    <th>Issues</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach (array_slice($project_health, 0, 10) as $project): ?>
-                                <tr>
-                                    <td>
-                                        <strong><?= esc($project['name']) ?></strong>
-                                        <br><small class="text-muted"><?= ucfirst(str_replace('_', ' ', $project['status'])) ?></small>
-                                    </td>
-                                    <td>
-                                        <?php
-                                        $healthColors = ['healthy' => 'success', 'warning' => 'warning', 'critical' => 'danger'];
-                                        $healthIcons = ['healthy' => 'check-circle-fill', 'warning' => 'exclamation-triangle-fill', 'critical' => 'x-circle-fill'];
-                                        ?>
-                                        <span class="badge bg-<?= $healthColors[$project['health_status']] ?>">
-                                            <i class="bi bi-<?= $healthIcons[$project['health_status']] ?>"></i>
-                                            <?= ucfirst($project['health_status']) ?>
-                                        </span>
-                                        <div class="small text-muted mt-1">
-                                            <?= esc($project['health_detail'] ?? 'Status signal') ?>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="progress" style="height: 20px; min-width: 100px;">
-                                            <div class="progress-bar bg-<?= $project['completion_rate'] < 30 ? 'danger' : ($project['completion_rate'] < 70 ? 'warning' : 'success') ?>" 
-                                                 style="width: <?= $project['completion_rate'] ?>%">
-                                                <?= $project['completion_rate'] ?>%
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <?php if ($project['blocked_tasks'] > 0): ?>
-                                        <span class="badge bg-danger"><?= $project['blocked_tasks'] ?> blocked</span>
-                                        <?php endif; ?>
-                                        <?php if ($project['overdue_tasks'] > 0): ?>
-                                        <span class="badge bg-warning"><?= $project['overdue_tasks'] ?> overdue</span>
-                                        <?php endif; ?>
-                                        <?php if ($project['blocked_tasks'] == 0 && $project['overdue_tasks'] == 0): ?>
-                                        <span class="text-muted">None</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <a href="<?= base_url('projects/view/' . $project['id']) ?>" class="btn btn-sm btn-outline-primary">View</a>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                    <div>
+                        <span><i class="bi bi-heart-pulse"></i> Project Health Overview</span>
+                        <div class="small text-muted">Collapsed by default to keep focus on alerts</div>
                     </div>
-                    <?php endif; ?>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#projectHealthCollapse" aria-expanded="false" aria-controls="projectHealthCollapse">
+                            <i class="bi bi-chevron-down"></i> Show/Hide
+                        </button>
+                        <a href="<?= base_url('projects/create') ?>" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-lg"></i> New Project
+                        </a>
+                    </div>
+                </div>
+                <div class="collapse" id="projectHealthCollapse">
+                    <div class="card-body">
+                        <?php if (empty($project_health)): ?>
+                        <p class="text-muted text-center py-4">No active projects</p>
+                        <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Project</th>
+                                        <th>Health</th>
+                                        <th>Progress</th>
+                                        <th>Issues</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach (array_slice($project_health, 0, 10) as $project): ?>
+                                    <tr>
+                                        <td>
+                                            <strong><?= esc($project['name']) ?></strong>
+                                            <br><small class="text-muted"><?= ucfirst(str_replace('_', ' ', $project['status'])) ?></small>
+                                        </td>
+                                        <td>
+                                            <?php
+                                            $healthColors = ['healthy' => 'success', 'warning' => 'warning', 'critical' => 'danger'];
+                                            $healthIcons = ['healthy' => 'check-circle-fill', 'warning' => 'exclamation-triangle-fill', 'critical' => 'x-circle-fill'];
+                                            ?>
+                                            <span class="badge bg-<?= $healthColors[$project['health_status']] ?>">
+                                                <i class="bi bi-<?= $healthIcons[$project['health_status']] ?>"></i>
+                                                <?= ucfirst($project['health_status']) ?>
+                                            </span>
+                                            <?php if ($project['health_status'] === 'warning'): ?>
+                                            <div class="small text-warning mt-1">
+                                                Warning reason: <?= esc($project['health_reason'] ?? $project['health_detail'] ?? 'Needs review') ?>
+                                            </div>
+                                            <?php else: ?>
+                                            <div class="small text-muted mt-1">
+                                                <?= esc($project['health_detail'] ?? 'Status signal') ?>
+                                            </div>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 20px; min-width: 100px;">
+                                                <div class="progress-bar bg-<?= $project['completion_rate'] < 30 ? 'danger' : ($project['completion_rate'] < 70 ? 'warning' : 'success') ?>" 
+                                                     style="width: <?= $project['completion_rate'] ?>%">
+                                                    <?= $project['completion_rate'] ?>%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <?php if ($project['blocked_tasks'] > 0): ?>
+                                            <span class="badge bg-danger"><?= $project['blocked_tasks'] ?> blocked</span>
+                                            <?php endif; ?>
+                                            <?php if ($project['overdue_tasks'] > 0): ?>
+                                            <span class="badge bg-warning"><?= $project['overdue_tasks'] ?> overdue</span>
+                                            <?php endif; ?>
+                                            <?php if ($project['blocked_tasks'] == 0 && $project['overdue_tasks'] == 0): ?>
+                                            <span class="text-muted">None</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <a href="<?= base_url('projects/view/' . $project['id']) ?>" class="btn btn-sm btn-outline-primary">View</a>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
