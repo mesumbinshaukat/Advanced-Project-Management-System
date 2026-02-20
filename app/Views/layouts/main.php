@@ -262,11 +262,13 @@
                     <i class="bi bi-graph-up"></i> Performance
                 </a>
             </li>
+            <!--
             <li class="sidebar-nav-item">
                 <a href="<?= base_url('profitability') ?>" class="sidebar-nav-link <?= url_is('profitability*') ? 'active' : '' ?>">
                     <i class="bi bi-currency-dollar"></i> Profitability
                 </a>
             </li>
+            -->
             <li class="sidebar-nav-item">
                 <a href="<?= base_url('capacity') ?>" class="sidebar-nav-link <?= url_is('capacity*') ? 'active' : '' ?>">
                     <i class="bi bi-bar-chart"></i> Capacity

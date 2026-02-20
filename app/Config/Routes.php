@@ -104,10 +104,10 @@ $routes->group('', ['filter' => 'session'], function($routes) {
         $routes->post('apply-project', 'TemplatesController::applyProjectTemplate');
     });
     
-    $routes->group('profitability', ['filter' => 'role:admin'], function($routes) {
-        $routes->get('/', 'ProfitabilityController::index');
-        $routes->get('project/(:num)', 'ProfitabilityController::project/$1');
-    });
+    // $routes->group('profitability', ['filter' => 'role:admin'], function($routes) {
+    //     $routes->get('/', 'ProfitabilityController::index');
+    //     $routes->get('project/(:num)', 'ProfitabilityController::project/$1');
+    // });
     
     $routes->group('capacity', ['filter' => 'role:admin'], function($routes) {
         $routes->get('/', 'CapacityController::index');

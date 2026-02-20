@@ -56,6 +56,9 @@
                                             <i class="bi bi-<?= $healthIcons[$project['health_status']] ?>"></i>
                                             <?= ucfirst($project['health_status']) ?>
                                         </span>
+                                        <div class="small text-muted mt-1">
+                                            <?= esc($project['health_detail'] ?? 'Status signal') ?>
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="progress" style="height: 20px; min-width: 100px;">
@@ -88,6 +91,49 @@
                 </div>
             </div>
         </div>
+        <?php if (!empty($delayed_projects)): ?>
+        <div class="col-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning bg-opacity-10">
+                    <i class="bi bi-clock-history"></i> Delayed Projects
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Projects listed below are past their deadline; review the delay reason and assign resources.</p>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Project</th>
+                                    <th>Owner</th>
+                                    <th>Status</th>
+                                    <th>Delay</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($delayed_projects as $project): ?>
+                                <tr>
+                                    <td>
+                                        <strong><?= esc($project['name']) ?></strong>
+                                        <br><small class="text-muted">Deadline: <?= date('M d, Y', strtotime($project['deadline'])) ?></small>
+                                    </td>
+                                    <td><?= esc($project['owner_name'] ?? 'Unassigned') ?></td>
+                                    <td class="text-capitalize">
+                                        <span class="badge bg-warning text-dark">Delayed</span>
+                                    </td>
+                                    <td><?= esc($project['delay_reason']) ?></td>
+                                    <td>
+                                        <a href="<?= base_url('projects/view/' . $project['id']) ?>" class="btn btn-sm btn-outline-primary">View</a>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
     <div class="row">

@@ -58,6 +58,35 @@ class DashboardService
             } else {
                 $project['health_status'] = 'healthy';
             }
+
+            if ($project['blocked_tasks'] > 0) {
+                $project['health_detail'] = $project['blocked_tasks'] . ' blocked task' . ($project['blocked_tasks'] > 1 ? 's' : '');
+            } elseif ($project['overdue_tasks'] > 0) {
+                $project['health_detail'] = $project['overdue_tasks'] . ' overdue task' . ($project['overdue_tasks'] > 1 ? 's' : '');
+            } elseif ($project['completion_rate'] < 30) {
+                $project['health_detail'] = 'Completion running at ' . $project['completion_rate'] . '%';
+            } else {
+                $project['health_detail'] = 'Healthy pacing';
+            }
+        }
+
+        return $projects;
+    }
+
+    public function getDelayedProjects()
+    {
+        $projects = $this->projectModel
+            ->select('projects.*, users.username as owner_name')
+            ->join('users', 'users.id = projects.owner_id', 'left')
+            ->where('projects.deadline <', date('Y-m-d'))
+            ->whereIn('projects.status', ['active', 'in_progress', 'review'])
+            ->where('projects.deleted_at', null)
+            ->orderBy('projects.deadline', 'ASC')
+            ->findAll();
+
+        foreach ($projects as &$project) {
+            $project['days_delayed'] = max(0, floor((time() - strtotime($project['deadline'])) / 86400));
+            $project['delay_reason'] = $project['days_delayed'] > 0 ? 'Delayed by ' . $project['days_delayed'] . ' day' . ($project['days_delayed'] > 1 ? 's' : '') : 'Due today';
         }
 
         return $projects;

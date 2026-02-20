@@ -27,6 +27,11 @@ class DashboardController extends BaseController
 
         if ($isAdmin) {
             $executiveData = $this->dashboardService->getExecutiveDashboard();
+            if (method_exists($this->dashboardService, 'getDelayedProjects')) {
+                $executiveData['delayed_projects'] = $this->dashboardService->getDelayedProjects();
+            } else {
+                $executiveData['delayed_projects'] = [];
+            }
             $data = array_merge($data, $executiveData);
         } else {
             $developerData = $this->dashboardService->getDeveloperDashboard($user->id);

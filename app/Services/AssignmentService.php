@@ -121,7 +121,8 @@ class AssignmentService
         $builder = $db->table('users')
             ->select('users.id, users.username')
             ->join('auth_groups_users', 'auth_groups_users.user_id = users.id')
-            ->where('auth_groups_users.group', 'developer');
+            ->where('auth_groups_users.group', 'developer')
+            ->where('users.active', 1);
 
         if ($projectId) {
             $builder->join('project_users', 'project_users.user_id = users.id')
