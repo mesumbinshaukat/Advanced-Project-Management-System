@@ -150,9 +150,9 @@
                 <a href="<?= base_url('notes?project_id=' . $project['id']) ?>" class="btn btn-outline-primary w-100 mb-2">
                     <i class="bi bi-journal-text"></i> View Notes
                 </a>
-                <a href="<?= base_url('messages/' . $project['id']) ?>" class="btn btn-outline-primary w-100 mb-2">
+                <!-- <a href="<?= base_url('messages/' . $project['id']) ?>" class="btn btn-outline-primary w-100 mb-2">
                     <i class="bi bi-chat-dots"></i> View Messages
-                </a>
+                </a> -->
                 <a href="<?= base_url('profitability/project/' . $project['id']) ?>" class="btn btn-outline-success w-100">
                     <i class="bi bi-graph-up"></i> View Profitability
                 </a>
@@ -165,9 +165,9 @@
                 <a href="<?= base_url('notes?project_id=' . $project['id']) ?>" class="btn btn-outline-primary w-100 mb-2">
                     <i class="bi bi-journal-text"></i> View Notes
                 </a>
-                <a href="<?= base_url('messages/' . $project['id']) ?>" class="btn btn-outline-primary w-100">
+                <!-- <a href="<?= base_url('messages/' . $project['id']) ?>" class="btn btn-outline-primary w-100">
                     <i class="bi bi-chat-dots"></i> View Messages
-                </a>
+                </a> -->
             </div>
         </div>
         <?php endif; ?>

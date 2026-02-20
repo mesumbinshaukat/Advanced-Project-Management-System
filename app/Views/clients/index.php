@@ -43,6 +43,9 @@
                                 <a href="<?= base_url('clients/edit/' . $client['id']) ?>" class="btn btn-outline-secondary">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                <a href="<?= base_url('clients/delete/' . $client['id']) ?>" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to delete this client?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
                             </div>
                         </td>
                     </tr>

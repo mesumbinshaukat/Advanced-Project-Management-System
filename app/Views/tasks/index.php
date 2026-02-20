@@ -27,6 +27,7 @@
                         <th>Assigned To</th>
                         <th>Deadline</th>
                         <th>Hours</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -91,6 +92,21 @@
                                 <?php endif; ?>
                                 h
                             </small>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="<?= base_url('tasks/view/' . $task['id']) ?>" class="btn btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <?php if ($isAdmin): ?>
+                                <a href="<?= base_url('tasks/edit/' . $task['id']) ?>" class="btn btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="<?= base_url('tasks/delete/' . $task['id']) ?>" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to delete this task?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                <?php endif; ?>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>

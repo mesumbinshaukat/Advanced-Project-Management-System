@@ -25,6 +25,7 @@ $routes->group('', ['filter' => 'session'], function($routes) {
         $routes->get('view/(:num)', 'ProjectsController::view/$1');
         $routes->get('create', 'ProjectsController::create', ['filter' => 'permission:projects.create']);
         $routes->get('edit/(:num)', 'ProjectsController::edit/$1', ['filter' => 'permission:projects.edit']);
+        $routes->get('delete/(:num)', 'ProjectsController::delete/$1', ['filter' => 'role:admin']);
     });
     
     $routes->group('tasks', ['filter' => 'permission:tasks.view.assigned,tasks.view.all'], function($routes) {
@@ -34,12 +35,14 @@ $routes->group('', ['filter' => 'session'], function($routes) {
         $routes->get('create', 'TasksController::create', ['filter' => 'permission:tasks.create']);
         $routes->get('create/(:num)', 'TasksController::create/$1', ['filter' => 'permission:tasks.create']);
         $routes->get('edit/(:num)', 'TasksController::edit/$1', ['filter' => 'permission:tasks.edit']);
+        $routes->get('delete/(:num)', 'TasksController::delete/$1', ['filter' => 'role:admin']);
     });
     
     $routes->group('clients', ['filter' => 'role:admin'], function($routes) {
         $routes->get('/', 'ClientsController::index');
         $routes->get('create', 'ClientsController::create');
         $routes->get('edit/(:num)', 'ClientsController::edit/$1');
+        $routes->get('delete/(:num)', 'ClientsController::delete/$1');
     });
     
     $routes->group('time', ['filter' => 'permission:time.log,time.view.all'], function($routes) {
@@ -58,10 +61,10 @@ $routes->group('', ['filter' => 'session'], function($routes) {
         $routes->get('delete/(:num)', 'NotesController::delete/$1');
     });
     
-    $routes->group('messages', ['filter' => 'permission:projects.view.assigned,projects.view.all'], function($routes) {
-        $routes->get('(:num)', 'MessagesController::index/$1');
-        $routes->post('store', 'MessagesController::store');
-    });
+    // $routes->group('messages', ['filter' => 'permission:projects.view.assigned,projects.view.all'], function($routes) {
+    //     $routes->get('(:num)', 'MessagesController::index/$1');
+    //     $routes->post('store', 'MessagesController::store');
+    // });
     
     $routes->group('developers', ['filter' => 'role:admin'], function($routes) {
         $routes->get('/', 'DevelopersController::index');
@@ -160,12 +163,12 @@ $routes->group('', ['filter' => 'session'], function($routes) {
             $routes->post('pin/(:num)', 'Api\NotesController::pin/$1');
         });
         
-        $routes->group('messages', ['filter' => 'permission:projects.view.assigned,projects.view.all'], function($routes) {
-            $routes->get('/', 'Api\MessagesController::index');
-            $routes->post('/', 'Api\MessagesController::create');
-            $routes->post('(:num)/read', 'Api\MessagesController::markRead/$1');
-            $routes->get('unread', 'Api\MessagesController::unreadCount');
-        });
+        // $routes->group('messages', ['filter' => 'permission:projects.view.assigned,projects.view.all'], function($routes) {
+        //     $routes->get('/', 'Api\MessagesController::index');
+        //     $routes->post('/', 'Api\MessagesController::create');
+        //     $routes->post('(:num)/read', 'Api\MessagesController::markRead/$1');
+        //     $routes->get('unread', 'Api\MessagesController::unreadCount');
+        // });
         
         $routes->group('assignment', ['filter' => 'permission:projects.view.all'], function($routes) {
             $routes->get('suggest', 'Api\AssignmentController::suggest');

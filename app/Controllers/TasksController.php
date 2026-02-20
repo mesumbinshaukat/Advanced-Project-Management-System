@@ -160,7 +160,26 @@ class TasksController extends BaseController
             'projects' => $projects,
             'users' => $users,
         ];
-
+        
         return view('tasks/edit', $data);
+    }
+
+    public function delete($id)
+    {
+        $user = auth()->user();
+        if (!$user->inGroup('admin')) {
+            return redirect()->to('/tasks')->with('error', 'Access denied');
+        }
+
+        $taskModel = new TaskModel();
+        $task = $taskModel->find($id);
+
+        if (!$task) {
+            return redirect()->to('/tasks')->with('error', 'Task not found');
+        }
+
+        $taskModel->delete($id);
+
+        return redirect()->to('/tasks')->with('success', 'Task deleted successfully');
     }
 }

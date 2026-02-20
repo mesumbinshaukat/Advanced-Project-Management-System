@@ -121,4 +121,23 @@ class ProjectsController extends BaseController
 
         return view('projects/edit', $data);
     }
+
+    public function delete($id)
+    {
+        $user = auth()->user();
+        if (!$user->inGroup('admin')) {
+            return redirect()->to('/projects')->with('error', 'Access denied');
+        }
+
+        $projectModel = new ProjectModel();
+        $project = $projectModel->find($id);
+
+        if (!$project) {
+            return redirect()->to('/projects')->with('error', 'Project not found');
+        }
+
+        $projectModel->delete($id);
+
+        return redirect()->to('/projects')->with('success', 'Project deleted successfully');
+    }
 }

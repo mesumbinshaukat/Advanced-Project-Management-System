@@ -42,7 +42,21 @@ class ClientsController extends BaseController
             'title' => 'Edit Client',
             'client' => $client,
         ];
-
+        
         return view('clients/edit', $data);
+    }
+
+    public function delete($id)
+    {
+        $clientModel = new ClientModel();
+        $client = $clientModel->find($id);
+
+        if (!$client) {
+            return redirect()->to('/clients')->with('error', 'Client not found');
+        }
+
+        $clientModel->delete($id);
+
+        return redirect()->to('/clients')->with('success', 'Client deleted successfully');
     }
 }
