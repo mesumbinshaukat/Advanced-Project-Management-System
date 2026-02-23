@@ -2,13 +2,36 @@
 
 <?= $this->section('content') ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Projects</h2>
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <h2 class="mb-0">Projects</h2>
     <?php if ($isAdmin): ?>
     <a href="<?= base_url('projects/create') ?>" class="btn btn-primary">
         <i class="bi bi-plus-lg"></i> New Project
     </a>
     <?php endif; ?>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="clientFilter" class="form-label">Client</label>
+                <select id="clientFilter" name="client_id" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Clients</option>
+                    <?php foreach ($clients as $client): ?>
+                    <option value="<?= $client['id'] ?>" <?= ($selectedClientId === (int) $client['id']) ? 'selected' : '' ?>>
+                        <?= esc($client['name']) ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <?php if (!empty($selectedClientId)): ?>
+            <div class="col-md-2 d-flex align-items-end">
+                <a href="<?= current_url() ?>" class="btn btn-outline-secondary w-100">Clear Filter</a>
+            </div>
+            <?php endif; ?>
+        </form>
+    </div>
 </div>
 
 <div class="card">

@@ -167,4 +167,24 @@ class ProjectsController extends ResourceController
         
         return $this->fail('Failed to remove user from project');
     }
+
+    public function checkName()
+    {
+        $name = $this->request->getGet('name');
+        if (!$name) {
+            return $this->failValidationErrors('Name parameter is required');
+        }
+
+        $projectModel = new ProjectModel();
+        $existing = $projectModel
+            ->select('id, name')
+            ->like('name', $name, 'both')
+            ->orderBy('updated_at', 'DESC')
+            ->findAll(5);
+
+        return $this->respond([
+            'status' => 'success',
+            'matches' => $existing,
+        ]);
+    }
 }

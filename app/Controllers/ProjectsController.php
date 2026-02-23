@@ -13,14 +13,22 @@ class ProjectsController extends BaseController
     {
         $user = auth()->user();
         $isAdmin = $user->inGroup('admin');
-        
+
         $projectModel = new ProjectModel();
-        $projects = $projectModel->getProjectsForUser($user->id, $isAdmin);
-        
+        $clientId = $this->request->getGet('client_id');
+        $clientFilter = (!empty($clientId) && is_numeric($clientId)) ? (int) $clientId : null;
+
+        $projects = $projectModel->getProjectsForUser($user->id, $isAdmin, $clientFilter);
+
+        $clientModel = new ClientModel();
+        $clients = $clientModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
+
         $data = [
             'title' => 'Projects',
             'projects' => $projects,
             'isAdmin' => $isAdmin,
+            'clients' => $clients,
+            'selectedClientId' => $clientFilter,
         ];
 
         return view('projects/index', $data);

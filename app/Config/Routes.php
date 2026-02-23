@@ -128,6 +128,7 @@ $routes->group('', ['filter' => 'session'], function($routes) {
             $routes->delete('(:num)', 'Api\ProjectsController::delete/$1', ['filter' => 'permission:projects.delete']);
             $routes->post('(:num)/assign', 'Api\ProjectsController::assignUser/$1', ['filter' => 'permission:projects.assign']);
             $routes->delete('(:num)/users/(:num)', 'Api\ProjectsController::removeUser/$1/$2', ['filter' => 'permission:projects.assign']);
+            $routes->get('check-name', 'Api\ProjectsController::checkName', ['filter' => 'permission:projects.create']);
         });
         
         $routes->group('tasks', ['filter' => 'permission:tasks.view.assigned,tasks.view.all'], function($routes) {

@@ -66,15 +66,6 @@
                         <textarea name="blockers" class="form-control" rows="2" placeholder="Describe any blockers (optional)"><?= $today_check_in['blockers'] ?? '' ?></textarea>
                     </div>
 
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input type="checkbox" name="needs_help" value="1" class="form-check-input" id="needs_help" <?= ($today_check_in['needs_help'] ?? 0) ? 'checked' : '' ?>>
-                            <label class="form-check-label" for="needs_help">
-                                <strong>I need help with something</strong>
-                            </label>
-                        </div>
-                    </div>
-
                     <button type="submit" class="btn btn-primary btn-lg w-100">
                         <i class="bi bi-check-circle"></i> Submit Check-In
                     </button>

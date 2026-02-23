@@ -17,14 +17,33 @@
                     <?php endif; ?>
                 </p>
             </div>
-            <?php if ($contextType !== 'all'): ?>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNoteModal">
                 <i class="bi bi-plus-lg"></i> Add Note
             </button>
-            <?php endif; ?>
         </div>
     </div>
 </div>
+
+<?php if ($contextType === 'all' && !empty($availableProjects)): ?>
+<div class="row mb-3">
+    <div class="col-lg-6">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-8">
+                <label class="form-label">Filter by Project</label>
+                <select name="project_id" class="form-select">
+                    <option value="">Select a project</option>
+                    <?php foreach ($availableProjects as $project): ?>
+                    <option value="<?= $project['id'] ?>"><?= esc($project['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-4">
+                <button type="submit" class="btn btn-outline-primary w-100">View Notes</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?php endif; ?>
 
 <div class="row">
     <div class="col-12">
@@ -96,39 +115,62 @@
 </div>
 
 <div class="modal fade" id="addNoteModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form action="<?= base_url('notes/store') ?>" method="post">
                 <?= csrf_field() ?>
-                <input type="hidden" name="project_id" value="<?= $projectId ?>">
-                <input type="hidden" name="task_id" value="<?= $taskId ?>">
-                
-                <div class="modal-header">
-                    <h5 class="modal-title">Add Note</h5>
+
+                <div class="modal-header border-0 pb-0">
+                    <div>
+                        <p class="text-uppercase text-muted small mb-1">New entry</p>
+                        <h5 class="modal-title">Add Note</h5>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Type</label>
-                        <select name="type" class="form-select" required>
-                            <option value="note">Note</option>
-                            <option value="decision">Decision</option>
-                            <option value="blocker">Blocker</option>
-                            <option value="update">Update</option>
+
+                <div class="modal-body pt-3">
+                    <?php if ($contextType === 'project'): ?>
+                    <input type="hidden" name="project_id" value="<?= $projectId ?>">
+                    <?php elseif ($contextType === 'task'): ?>
+                    <input type="hidden" name="task_id" value="<?= $taskId ?>">
+                    <?php else: ?>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Project <span class="text-muted small">(required)</span></label>
+                        <select name="project_id" class="form-select" required>
+                            <option value="">Select a project</option>
+                            <?php foreach ($availableProjects as $project): ?>
+                            <option value="<?= $project['id'] ?>"><?= esc($project['name']) ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Title (Optional)</label>
-                        <input type="text" name="title" class="form-control" placeholder="Brief title">
+                    <?php endif; ?>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Type</label>
+                            <select name="type" class="form-select" required>
+                                <option value="note">Note</option>
+                                <option value="decision">Decision</option>
+                                <option value="blocker">Blocker</option>
+                                <option value="update">Update</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Title <span class="text-muted small">(optional)</span></label>
+                            <input type="text" name="title" class="form-control" placeholder="Short summary">
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Content</label>
-                        <textarea name="content" class="form-control" rows="5" required placeholder="Enter note content..."></textarea>
+
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Details</label>
+                        <textarea name="content" class="form-control" rows="5" required placeholder="Capture decisions, blockers, or updates..."></textarea>
+                        <small class="text-muted">Markdown formatting is supported.</small>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Note</button>
+
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4">Save Note</button>
                 </div>
             </form>
         </div>

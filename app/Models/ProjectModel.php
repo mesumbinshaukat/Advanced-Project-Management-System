@@ -55,19 +55,21 @@ class ProjectModel extends Model
     protected $beforeDelete = [];
     protected $afterDelete = ['logActivity'];
 
-    public function getProjectsForUser($userId, $isAdmin = false)
+    public function getProjectsForUser($userId, $isAdmin = false, $clientId = null)
     {
-        if ($isAdmin) {
-            return $this->select('projects.*, clients.name as client_name')
-                ->join('clients', 'clients.id = projects.client_id', 'left')
-                ->findAll();
+        $builder = $this->select('projects.*, clients.name as client_name')
+            ->join('clients', 'clients.id = projects.client_id', 'left');
+
+        if (!$isAdmin) {
+            $builder->join('project_users', 'project_users.project_id = projects.id')
+                ->where('project_users.user_id', $userId);
         }
 
-        return $this->select('projects.*, clients.name as client_name')
-            ->join('clients', 'clients.id = projects.client_id', 'left')
-            ->join('project_users', 'project_users.project_id = projects.id')
-            ->where('project_users.user_id', $userId)
-            ->findAll();
+        if (!empty($clientId) && is_numeric($clientId)) {
+            $builder->where('projects.client_id', (int) $clientId);
+        }
+
+        return $builder->findAll();
     }
 
     public function getProjectHealth($projectId)

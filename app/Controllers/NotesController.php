@@ -26,6 +26,8 @@ class NotesController extends BaseController
         $projectId = $this->request->getGet('project_id');
         $taskId = $this->request->getGet('task_id');
 
+        $availableProjects = [];
+
         if ($projectId) {
             $notes = $this->noteModel->getProjectNotes($projectId);
             $context = $this->projectModel->find($projectId);
@@ -46,6 +48,8 @@ class NotesController extends BaseController
                 ->findAll();
             $context = null;
             $contextType = 'all';
+
+            $availableProjects = $this->projectModel->getProjectsForUser($user->id, $isAdmin);
         }
 
         return view('notes/index', [
@@ -55,6 +59,7 @@ class NotesController extends BaseController
             'contextType' => $contextType,
             'projectId' => $projectId,
             'taskId' => $taskId,
+            'availableProjects' => $availableProjects,
         ]);
     }
 
@@ -79,9 +84,13 @@ class NotesController extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->noteModel->errors());
         }
 
-        $redirectUrl = $data['project_id'] 
-            ? "/notes?project_id={$data['project_id']}" 
-            : "/notes?task_id={$data['task_id']}";
+        if (!empty($data['project_id'])) {
+            $redirectUrl = "/notes?project_id={$data['project_id']}";
+        } elseif (!empty($data['task_id'])) {
+            $redirectUrl = "/notes?task_id={$data['task_id']}";
+        } else {
+            $redirectUrl = '/notes';
+        }
 
         return redirect()->to($redirectUrl)->with('success', 'Note created successfully');
     }

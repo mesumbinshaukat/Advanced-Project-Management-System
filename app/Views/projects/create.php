@@ -23,6 +23,7 @@
                     <div class="mb-3">
                         <label for="name" class="form-label">Project Name *</label>
                         <input type="text" class="form-control" id="name" name="name" required>
+                        <div id="projectNameWarning" class="form-text text-warning d-none"></div>
                     </div>
 
                     <div class="mb-3">
@@ -80,6 +81,46 @@
 
 <?= $this->section('scripts') ?>
 <script>
+const nameInput = document.getElementById('name');
+const nameWarning = document.getElementById('projectNameWarning');
+let nameCheckTimeout;
+
+nameInput.addEventListener('input', () => {
+    const value = nameInput.value.trim();
+    if (nameCheckTimeout) {
+        clearTimeout(nameCheckTimeout);
+    }
+
+    if (value.length < 3) {
+        nameWarning.classList.add('d-none');
+        nameWarning.innerHTML = '';
+        return;
+    }
+
+    nameCheckTimeout = setTimeout(async () => {
+        try {
+            const response = await fetch('<?= base_url('api/projects/check-name') ?>?name=' + encodeURIComponent(value));
+            if (!response.ok) {
+                throw new Error('Failed name check');
+            }
+
+            const data = await response.json();
+            const matches = data.matches || [];
+
+            if (matches.length > 0) {
+                const links = matches.map(match => `<a href="<?= base_url('projects/view/') ?>${match.id}" target="_blank" class="text-decoration-underline">${match.name}</a>`).join(', ');
+                nameWarning.innerHTML = `<i class="bi bi-info-circle"></i> Possible duplicate project(s) found: ${links}. Continue only if this is truly a new project.`;
+                nameWarning.classList.remove('d-none');
+            } else {
+                nameWarning.classList.add('d-none');
+                nameWarning.innerHTML = '';
+            }
+        } catch (error) {
+            console.error('Project name check failed', error);
+        }
+    }, 400);
+});
+
 document.getElementById('projectForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
