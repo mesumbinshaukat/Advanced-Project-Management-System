@@ -76,8 +76,8 @@ class DashboardService
     public function getDelayedProjects()
     {
         $projects = $this->projectModel
-            ->select('projects.*, users.username as owner_name')
-            ->join('users', 'users.id = projects.owner_id', 'left')
+            ->select('projects.*, owner.username as owner_name')
+            ->join('users owner', 'owner.id = projects.created_by', 'left')
             ->where('projects.deadline <', date('Y-m-d'))
             ->whereIn('projects.status', ['active', 'in_progress', 'review'])
             ->where('projects.deleted_at', null)
