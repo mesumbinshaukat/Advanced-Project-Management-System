@@ -46,6 +46,12 @@
                             <input type="password" class="form-control" id="password_confirm" name="password_confirm" required>
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label">Skills</label>
+                            <input type="text" class="form-control" id="skills" name="skills" value="<?= old('skills') ?>" placeholder="e.g. PHP, APIs, QA" />
+                            <small class="form-text text-muted">Comma-separated skills so tasks can filter the right developers.</small>
+                        </div>
+
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary">Create User</button>
                             <a href="<?= base_url('users') ?>" class="btn btn-outline-secondary">Cancel</a>

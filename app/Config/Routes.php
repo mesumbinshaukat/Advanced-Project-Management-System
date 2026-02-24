@@ -85,7 +85,9 @@ $routes->group('', ['filter' => 'session'], function($routes) {
     $routes->group('check-in', function($routes) {
         $routes->get('/', 'CheckInController::index');
         $routes->post('store', 'CheckInController::store');
+        $routes->post('checkout', 'CheckInController::checkout');
         $routes->get('team', 'CheckInController::team', ['filter' => 'role:admin']);
+        $routes->post('update-times', 'CheckInController::updateTimes', ['filter' => 'role:admin']);
     });
     
     $routes->group('alerts', function($routes) {

@@ -43,7 +43,7 @@ $RECYCLE.BIN/
 # as it poses a security risk.
 .env
 .env.staging
-.env.production
+.env.prod
 .vagrant
 Vagrantfile
 

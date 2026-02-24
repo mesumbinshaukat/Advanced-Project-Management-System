@@ -160,13 +160,18 @@ class DashboardService
         return array_slice($alerts, 0, 10);
     }
 
-    public function getRecentActivity($limit = 10)
+    public function getRecentActivity(int $limit = 10, ?int $userId = null)
     {
-        return $this->activityLogModel
+        $builder = $this->activityLogModel
             ->select('activity_logs.*, users.username')
-            ->join('users', 'users.id = activity_logs.user_id')
-            ->orderBy('activity_logs.created_at', 'DESC')
-            ->findAll($limit);
+            ->join('users', 'users.id = activity_logs.user_id', 'left')
+            ->orderBy('activity_logs.created_at', 'DESC');
+
+        if ($userId !== null) {
+            $builder->where('activity_logs.user_id', $userId);
+        }
+
+        return $builder->findAll($limit);
     }
 
     public function getTeamPerformance()
@@ -242,11 +247,7 @@ class DashboardService
             ->orderBy('projects.status', 'ASC')
             ->findAll();
 
-        $recentActivity = $this->activityLogModel
-            ->select('activity_logs.*, users.username')
-            ->join('users', 'users.id = activity_logs.user_id')
-            ->orderBy('activity_logs.created_at', 'DESC')
-            ->findAll(10);
+        $recentActivity = $this->getRecentActivity(10, $userId);
 
         $alertModel = new \App\Models\AlertModel();
         $myAlerts = $alertModel->getUserAlerts($userId);

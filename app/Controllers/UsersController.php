@@ -4,14 +4,17 @@ namespace App\Controllers;
 
 use CodeIgniter\Shield\Models\UserModel;
 use CodeIgniter\Shield\Entities\User;
+use App\Models\UserSkillModel;
 
 class UsersController extends BaseController
 {
     protected $userModel;
+    protected $userSkillModel;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
+        $this->userSkillModel = new UserSkillModel();
     }
 
     public function index()
@@ -23,9 +26,13 @@ class UsersController extends BaseController
             ->where('auth_identities.type', 'email_password')
             ->findAll();
 
+        $userIds = array_column($users, 'id');
+        $skillsMap = $this->userSkillModel->getSkillsForUsers($userIds);
+
         return view('users/index', [
             'title' => 'User Management',
             'users' => $users,
+            'userSkills' => $skillsMap,
         ]);
     }
 
@@ -62,6 +69,9 @@ class UsersController extends BaseController
         }
 
         $userId = $this->userModel->getInsertID();
+        $skillsInput = $this->request->getPost('skills') ?? '';
+        $skills = array_filter(array_map('trim', explode(',', $skillsInput)));
+        $this->userSkillModel->setUserSkills($userId, $skills);
         
         // Assign default 'developer' role to new users
         $user = $this->userModel->find($userId);
@@ -79,9 +89,13 @@ class UsersController extends BaseController
             return redirect()->back()->with('error', 'User not found');
         }
 
+        $skills = $this->userSkillModel->getSkillsForUser($id);
+
         return view('users/edit', [
             'title' => 'Edit User',
             'user' => $user,
+            'skills' => $skills,
+            'skills_display' => implode(', ', $skills),
         ]);
     }
 
@@ -109,6 +123,10 @@ class UsersController extends BaseController
         if (!$this->userModel->save($user)) {
             return redirect()->back()->withInput()->with('errors', $this->userModel->errors());
         }
+
+        $skillsInput = $this->request->getPost('skills') ?? '';
+        $skills = array_filter(array_map('trim', explode(',', $skillsInput)));
+        $this->userSkillModel->setUserSkills($id, $skills);
 
         return redirect()->to('/users')->with('success', 'User updated successfully');
     }

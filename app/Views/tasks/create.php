@@ -1,5 +1,11 @@
 <?= $this->extend('layouts/main') ?>
 
+<?php
+$user_skills = $user_skills ?? [];
+$skill_options = $skill_options ?? [];
+$is_admin = $is_admin ?? false;
+?>
+
 <?= $this->section('content') ?>
 
 <div class="row justify-content-center">
@@ -15,7 +21,9 @@
                         <select class="form-select" id="project_id" name="project_id" required>
                             <option value="">Select Project</option>
                             <?php foreach ($projects as $project): ?>
-                            <option value="<?= $project['id'] ?>" <?= ($selected_project_id == $project['id']) ? 'selected' : '' ?>>
+                            <option value="<?= $project['id'] ?>" 
+                                data-priority="<?= esc($project['priority'] ?? 'medium') ?>"
+                                <?= ($selected_project_id == $project['id']) ? 'selected' : '' ?>>
                                 <?= esc($project['name']) ?>
                             </option>
                             <?php endforeach; ?>
@@ -32,16 +40,35 @@
                         <textarea class="form-control" id="description" name="description" rows="4"></textarea>
                     </div>
 
+                    <?php if (!empty($is_admin) && !empty($skill_options)): ?>
+                    <div class="mb-3">
+                        <label for="skill_filter" class="form-label">Filter Developers by Skill</label>
+                        <select class="form-select" id="skill_filter">
+                            <option value="">All Skills</option>
+                            <?php foreach ($skill_options as $skill): ?>
+                            <option value="<?= esc($skill) ?>"><?= esc(ucfirst($skill)) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <small class="form-text text-muted">Choose a skill to narrow the assignee list. Only admins see this filter.</small>
+                    </div>
+                    <?php endif; ?>
+
                     <div class="mb-3">
                         <label for="assigned_to" class="form-label">Assign To</label>
                         <select class="form-select" id="assigned_to" name="assigned_to">
                             <option value="">Unassigned</option>
                             <?php foreach ($users as $user): ?>
-                            <option value="<?= $user['id'] ?>">
-                                <?= esc($user['username']) ?>
+                            <?php 
+                                $skillsList = $user_skills[$user['id']] ?? [];
+                                $skillsLabel = empty($skillsList) ? '' : ' • ' . implode(', ', $skillsList);
+                                $skillKey = implode('|', array_map('strtolower', $skillsList));
+                            ?>
+                            <option value="<?= $user['id'] ?>" data-skills="<?= esc($skillKey, 'attr') ?>">
+                                <?= esc($user['username'] . $skillsLabel) ?>
                             </option>
                             <?php endforeach; ?>
                         </select>
+                        <small class="form-text text-muted">Usernames show relevant skills to help pick the right teammate.</small>
                     </div>
 
                     <div class="row">
@@ -100,6 +127,54 @@
 
 <?= $this->section('scripts') ?>
 <script>
+const projectSelect = document.getElementById('project_id');
+const prioritySelect = document.getElementById('priority');
+const assignmentSelect = document.getElementById('assigned_to');
+const skillFilterSelect = document.getElementById('skill_filter');
+
+function setPriorityFromProject() {
+    if (!projectSelect) return;
+    const selected = projectSelect.options[projectSelect.selectedIndex];
+    if (!selected) return;
+    const projectPriority = selected.getAttribute('data-priority');
+    if (projectPriority) {
+        prioritySelect.value = projectPriority;
+    }
+}
+
+// Apply default priority on load if a project is pre-selected
+setPriorityFromProject();
+
+projectSelect.addEventListener('change', () => {
+    setPriorityFromProject();
+});
+
+function filterUsersBySkill() {
+    if (!skillFilterSelect || !assignmentSelect) return;
+    const selectedSkill = skillFilterSelect.value.toLowerCase();
+    const options = assignmentSelect.querySelectorAll('option');
+
+    options.forEach(option => {
+        if (!option.value) {
+            option.hidden = false;
+            return;
+        }
+
+        const optionSkills = (option.dataset.skills || '');
+        const matches = !selectedSkill || optionSkills.split('|').includes(selectedSkill);
+        option.hidden = !matches;
+
+        if (!matches && option.selected) {
+            assignmentSelect.value = '';
+        }
+    });
+}
+
+if (skillFilterSelect) {
+    skillFilterSelect.addEventListener('change', filterUsersBySkill);
+    filterUsersBySkill();
+}
+
 document.getElementById('taskForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     

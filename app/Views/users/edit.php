@@ -31,8 +31,14 @@
 
                         <div class="mb-3">
                             <label for="email" class="form-label">Email Address</label>
-                            <input type="email" class="form-control" id="email" name="email" value="<?= old('email', esc($user->email ?? '')) ?>" disabled>
+                            <input type="email" class="form-control" id="email" name="email" value="<?= old('email', esc($user->email ?? '')) ?>" readonly>
                             <small class="form-text text-muted">Email cannot be changed</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Skills</label>
+                            <input type="text" class="form-control" id="skills" name="skills" value="<?= old('skills', esc($skills_display ?? '')) ?>" placeholder="e.g. PHP, APIs, QA" />
+                            <small class="form-text text-muted">Enter comma-separated skills. These power developer filtering in task assignment.</small>
                         </div>
 
                         <div class="mb-3">

@@ -20,13 +20,78 @@
 
 <div class="row">
     <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <i class="bi bi-calendar-check"></i> Today's Check-In (<?= date('l, F j, Y') ?>)
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-calendar-check"></i> Today's Check-In (<?= date('l, F j, Y') ?>)</span>
+                <?php if (!empty($today_check_in['checked_in_at'])): ?>
+                <span class="badge bg-light text-primary">
+                    Checked in at <?= date('g:i A', strtotime($today_check_in['checked_in_at'])) ?>
+                </span>
+                <?php endif; ?>
+
+<?= $this->section('scripts') ?>
+<script>
+    (function () {
+        const pad = (value) => String(value).padStart(2, '0');
+        const formatLocalDateTime = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+
+        const checkInForm = document.getElementById('checkInForm');
+        if (checkInForm) {
+            checkInForm.addEventListener('submit', () => {
+                const hidden = document.getElementById('client_checked_in_at');
+                if (hidden) {
+                    hidden.value = formatLocalDateTime(new Date());
+                }
+            });
+        }
+
+        document.querySelectorAll('.checkout-form').forEach((form) => {
+            form.addEventListener('submit', () => {
+                const hidden = form.querySelector('input[name="client_checked_out_at"]');
+                if (hidden) {
+                    hidden.value = formatLocalDateTime(new Date());
+                }
+            });
+        });
+    })();
+</script>
+<?= $this->endSection() ?>
             </div>
             <div class="card-body">
-                <form action="<?= base_url('check-in/store') ?>" method="post">
+                <?php if (!empty($has_checked_out)): ?>
+                <div class="alert alert-success d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>You're all set!</strong> Checked out at <?= date('g:i A', strtotime($today_check_in['checked_out_at'])) ?>.
+                        <div class="small text-muted">Come back tomorrow to check in again.</div>
+                    </div>
+                    <i class="bi bi-check-circle-fill fs-3"></i>
+                </div>
+                <?php elseif (!empty($today_check_in)): ?>
+                <div class="alert alert-info d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Checked in at <?= date('g:i A', strtotime($today_check_in['checked_in_at'])) ?></strong>
+                        <?php if (!empty($today_check_in['checkout_ready']) && empty($today_check_in['checked_out_at'])): ?>
+                        <div class="small text-muted">Update your notes any time, then check out when you're done.</div>
+                        <?php else: ?>
+                        <div class="small text-muted">Checkout becomes available on your next check-in cycle.</div>
+                        <?php endif; ?>
+                    </div>
+                    <?php if (!empty($can_checkout)): ?>
+                    <form class="ms-3 checkout-form" action="<?= base_url('check-in/checkout') ?>" method="post">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="client_checked_out_at" value="">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-box-arrow-right"></i> Check Out
+                        </button>
+                    </form>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+
+                <?php if (empty($has_checked_out)): ?>
+                <form id="checkInForm" action="<?= base_url('check-in/store') ?>" method="post">
                     <?= csrf_field() ?>
+                    <input type="hidden" name="client_checked_in_at" id="client_checked_in_at">
                     
                     <div class="mb-4">
                         <label class="form-label fw-bold">How are you feeling today?</label>
@@ -67,11 +132,47 @@
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-lg w-100">
-                        <i class="bi bi-check-circle"></i> Submit Check-In
+                        <i class="bi bi-check-circle"></i> <?= !empty($today_check_in) ? 'Update Check-In' : 'Submit Check-In' ?>
                     </button>
                 </form>
+                <?php else: ?>
+                <p class="text-muted text-center mb-0">Check-in edits are locked after checkout. See you tomorrow!</p>
+                <?php endif; ?>
             </div>
         </div>
+        <?php if (!empty($today_check_in['checked_out_at'])): ?>
+        <div class="card">
+            <div class="card-header"><i class="bi bi-journal-check"></i> Today's Summary</div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3">
+                        <div class="text-muted small">Checked In</div>
+                        <div class="fw-bold"><?= date('g:i A', strtotime($today_check_in['checked_in_at'])) ?></div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-muted small">Checked Out</div>
+                        <div class="fw-bold"><?= date('g:i A', strtotime($today_check_in['checked_out_at'])) ?></div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-muted small">Mood</div>
+                        <div class="fw-bold text-capitalize"><?= esc($today_check_in['mood'] ?? 'n/a') ?></div>
+                    </div>
+                </div>
+                <?php if (!empty($today_check_in['today_plan'])): ?>
+                <div class="mb-2">
+                    <strong>Today's plan:</strong>
+                    <div class="text-muted"><?= esc($today_check_in['today_plan']) ?></div>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($today_check_in['blockers'])): ?>
+                <div class="mb-0">
+                    <strong>Blockers:</strong>
+                    <div class="text-danger"><?= esc($today_check_in['blockers']) ?></div>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
     <div class="col-lg-4">

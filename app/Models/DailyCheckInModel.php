@@ -14,6 +14,9 @@ class DailyCheckInModel extends Model
     protected $allowedFields = [
         'user_id',
         'check_in_date',
+        'checked_in_at',
+        'checked_out_at',
+        'checkout_ready',
         'mood',
         'yesterday_accomplishments',
         'today_plan',
@@ -53,7 +56,7 @@ class DailyCheckInModel extends Model
         return $this->select('daily_check_ins.*, users.username')
             ->join('users', 'users.id = daily_check_ins.user_id')
             ->where('daily_check_ins.check_in_date', $date)
-            ->orderBy('daily_check_ins.mood', 'DESC')
+            ->orderBy('users.username', 'ASC')
             ->findAll();
     }
 

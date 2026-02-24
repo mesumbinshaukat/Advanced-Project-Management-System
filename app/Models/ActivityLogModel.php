@@ -20,6 +20,7 @@ class ActivityLogModel extends Model
         'description',
         'old_values',
         'new_values',
+        'metadata',
         'ip_address',
         'user_agent'
     ];
@@ -51,10 +52,10 @@ class ActivityLogModel extends Model
     protected $beforeDelete = [];
     protected $afterDelete = [];
 
-    public function logActivity($entityType, $entityId, $action, $description = '', $oldValues = null, $newValues = null)
+    public function logActivity($entityType, $entityId, $action, $description = '', $oldValues = null, $newValues = null, ?int $userIdOverride = null, array $metadata = [])
     {
         $request = \Config\Services::request();
-        $userId = auth()->id() ?? 0;
+        $userId = $userIdOverride ?? auth()->id() ?? 0;
 
         $data = [
             'user_id' => $userId,
@@ -64,11 +65,33 @@ class ActivityLogModel extends Model
             'description' => $description,
             'old_values' => $oldValues ? json_encode($oldValues) : null,
             'new_values' => $newValues ? json_encode($newValues) : null,
+            'metadata' => !empty($metadata) ? json_encode($metadata) : null,
             'ip_address' => $request->getIPAddress(),
             'user_agent' => $request->getUserAgent()->getAgentString(),
         ];
 
         return $this->insert($data);
+    }
+
+    public function getDetailedRecentActivity(int $limit = 20, ?int $userId = null)
+    {
+        $builder = $this->select('activity_logs.*, users.username')
+            ->join('users', 'users.id = activity_logs.user_id', 'left')
+            ->orderBy('activity_logs.created_at', 'DESC');
+
+        if ($userId !== null) {
+            $builder->where('activity_logs.user_id', $userId);
+        }
+
+        $results = $builder->findAll($limit);
+
+        foreach ($results as &$row) {
+            $row['metadata'] = $row['metadata'] ? json_decode($row['metadata'], true) : [];
+            $row['old_values'] = $row['old_values'] ? json_decode($row['old_values'], true) : null;
+            $row['new_values'] = $row['new_values'] ? json_decode($row['new_values'], true) : null;
+        }
+
+        return $results;
     }
 
     public function getRecentActivity($limit = 50, $entityType = null, $entityId = null)

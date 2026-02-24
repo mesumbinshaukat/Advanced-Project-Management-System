@@ -209,6 +209,7 @@ $db_port = $env['database.default.port'] ?? 3306;
             ['table' => 'activity_logs', 'column' => 'description', 'sql' => "ALTER TABLE `activity_logs` ADD COLUMN `description` TEXT NULL AFTER `action`"],
             ['table' => 'activity_logs', 'column' => 'ip_address', 'sql' => "ALTER TABLE `activity_logs` ADD COLUMN `ip_address` VARCHAR(45) NULL AFTER `new_values`"],
             ['table' => 'activity_logs', 'column' => 'user_agent', 'sql' => "ALTER TABLE `activity_logs` ADD COLUMN `user_agent` TEXT NULL AFTER `ip_address`"],
+            ['table' => 'activity_logs', 'column' => 'metadata', 'sql' => "ALTER TABLE `activity_logs` ADD COLUMN `metadata` JSON NULL AFTER `new_values`"],
             
             // Task templates - soft delete
             ['table' => 'task_templates', 'column' => 'deleted_at', 'sql' => "ALTER TABLE `task_templates` ADD COLUMN `deleted_at` DATETIME NULL AFTER `updated_at`"],
@@ -290,6 +291,34 @@ $db_port = $env['database.default.port'] ?? 3306;
             }
         } else {
             echo '<div class="info">Daily check-ins table already exists</div>';
+            $skipped++;
+        }
+        
+        // Create user_skills table if it doesn't exist
+        echo '<div class="info">Checking for user_skills table...</div>';
+        $tableCheck = $mysqli->query("SHOW TABLES LIKE 'user_skills'");
+        if (!$tableCheck || $tableCheck->num_rows === 0) {
+            echo '<div class="info">Creating user_skills table...</div>';
+            $createUserSkills = "CREATE TABLE IF NOT EXISTS `user_skills` (
+                `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `user_id` INT(11) UNSIGNED NOT NULL,
+                `skill` VARCHAR(100) NOT NULL,
+                `created_at` DATETIME NULL,
+                `updated_at` DATETIME NULL,
+                PRIMARY KEY (`id`),
+                KEY `user_id` (`user_id`),
+                KEY `skill` (`skill`),
+                CONSTRAINT `user_skills_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+            
+            if ($mysqli->query($createUserSkills)) {
+                echo '<div class="success">Created user_skills table</div>';
+                $added++;
+            } else {
+                echo '<div class="error">Error creating user_skills table: ' . htmlspecialchars($mysqli->error) . '</div>';
+            }
+        } else {
+            echo '<div class="info">user_skills table already exists</div>';
             $skipped++;
         }
         
@@ -462,6 +491,59 @@ $db_port = $env['database.default.port'] ?? 3306;
                 } else {
                     echo '<div class="error">Failed to add column daily_check_ins.' . htmlspecialchars($colName) . ': ' . htmlspecialchars($mysqli->error) . '</div>';
                 }
+            }
+        }
+
+        echo '</div>';
+
+        // Ensure checkout timestamps match 2026-02-24-150000_AddCheckInTimestamps
+        echo '<div class="step">';
+        echo '<h3>Step 6: Applying migration 2026-02-24-150000_AddCheckInTimestamps</h3>';
+
+        $timestampColumns = [
+            ['column' => 'checked_in_at', 'sql' => "ALTER TABLE `daily_check_ins` ADD COLUMN `checked_in_at` DATETIME NULL AFTER `check_in_date`"],
+            ['column' => 'checked_out_at', 'sql' => "ALTER TABLE `daily_check_ins` ADD COLUMN `checked_out_at` DATETIME NULL AFTER `checked_in_at`"],
+            ['column' => 'checkout_ready', 'sql' => "ALTER TABLE `daily_check_ins` ADD COLUMN `checkout_ready` TINYINT(1) NOT NULL DEFAULT 0 AFTER `checked_out_at`"],
+        ];
+
+        $dailyTableCheck = $mysqli->query("SHOW TABLES LIKE 'daily_check_ins'");
+
+        if (!$dailyTableCheck || $dailyTableCheck->num_rows === 0) {
+            echo '<div class="warning">daily_check_ins table missing, skipping timestamp updates.</div>';
+        } else {
+            foreach ($timestampColumns as $col) {
+                $colName = $col['column'];
+                $colCheck = $mysqli->query("SHOW COLUMNS FROM `daily_check_ins` LIKE '{$colName}'");
+
+                if ($colCheck && $colCheck->num_rows > 0) {
+                    echo '<div class="info">Column already exists: daily_check_ins.' . htmlspecialchars($colName) . '</div>';
+                    continue;
+                }
+
+                if ($mysqli->query($col['sql'])) {
+                    echo '<div class="success">Added column: daily_check_ins.' . htmlspecialchars($colName) . '</div>';
+                } else {
+                    echo '<div class="error">Failed to add column daily_check_ins.' . htmlspecialchars($colName) . ': ' . htmlspecialchars($mysqli->error) . '</div>';
+                }
+            }
+
+            // Backfill timestamps similar to migration
+            $backfillSql = "UPDATE daily_check_ins
+                SET checked_in_at = COALESCE(checked_in_at, created_at, CONCAT(check_in_date, ' 09:00:00'))
+                WHERE checked_in_at IS NULL";
+
+            if ($mysqli->query($backfillSql)) {
+                echo '<div class="success">Backfilled checked_in_at for legacy records.</div>';
+            } else {
+                echo '<div class="error">Failed to backfill checked_in_at: ' . htmlspecialchars($mysqli->error) . '</div>';
+            }
+
+            $readySql = "UPDATE daily_check_ins SET checkout_ready = 0 WHERE checkout_ready IS NULL";
+
+            if ($mysqli->query($readySql)) {
+                echo '<div class="success">Normalized checkout_ready flags.</div>';
+            } else {
+                echo '<div class="error">Failed to normalize checkout_ready: ' . htmlspecialchars($mysqli->error) . '</div>';
             }
         }
 

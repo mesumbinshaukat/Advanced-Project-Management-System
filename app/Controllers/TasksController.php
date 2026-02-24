@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\TaskModel;
 use App\Models\ProjectModel;
 use App\Models\ProjectUserModel;
+use App\Models\UserSkillModel;
 
 class TasksController extends BaseController
 {
@@ -80,14 +81,23 @@ class TasksController extends BaseController
         $users = $db->table('users')
             ->select('users.id, users.username')
             ->where('users.active', 1)
+            ->orderBy('users.username', 'ASC')
             ->get()
             ->getResultArray();
+
+        $userIds = array_column($users, 'id');
+        $skillModel = new UserSkillModel();
+        $userSkills = $skillModel->getSkillsForUsers($userIds);
+        $skillOptions = $skillModel->getAllSkills();
         
         $data = [
             'title' => 'Create Task',
             'projects' => $projects,
             'users' => $users,
             'selected_project_id' => $projectId,
+            'user_skills' => $userSkills,
+            'skill_options' => $skillOptions,
+            'is_admin' => $isAdmin,
         ];
 
         return view('tasks/create', $data);

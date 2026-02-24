@@ -40,6 +40,7 @@
                                 <tr>
                                     <th>Username</th>
                                     <th>Email</th>
+                                    <th>Skills</th>
                                     <th>Status</th>
                                     <th>Created</th>
                                     <th>Actions</th>
@@ -53,6 +54,16 @@
                                     </td>
                                     <td>
                                         <small class="text-muted"><?= esc($user['email'] ?? '-') ?></small>
+                                    </td>
+                                    <td>
+                                        <?php $skills = $userSkills[$user['id']] ?? []; ?>
+                                        <?php if (empty($skills)): ?>
+                                            <span class="badge bg-light text-muted">No skills tagged</span>
+                                        <?php else: ?>
+                                            <?php foreach ($skills as $skill): ?>
+                                            <span class="badge bg-secondary me-1"><?= esc($skill) ?></span>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <?php if ($user['active']): ?>
