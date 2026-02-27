@@ -19,12 +19,13 @@ class UsersController extends BaseController
 
     public function index()
     {
-        $users = $this->userModel
-            ->select('users.*, auth_identities.secret as email')
-            ->asArray()
-            ->join('auth_identities', 'auth_identities.user_id = users.id', 'left')
-            ->where('auth_identities.type', 'email_password')
-            ->findAll();
+        $db = \Config\Database::connect();
+        $users = $db->table('users')
+            ->select("users.*, email_identity.secret as email")
+            ->join("auth_identities AS email_identity", "email_identity.user_id = users.id AND email_identity.type = 'email_password'", 'left')
+            ->orderBy('users.username', 'ASC')
+            ->get()
+            ->getResultArray();
 
         $userIds = array_column($users, 'id');
         $skillsMap = $this->userSkillModel->getSkillsForUsers($userIds);

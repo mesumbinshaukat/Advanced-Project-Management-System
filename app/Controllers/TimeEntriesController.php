@@ -161,4 +161,19 @@ class TimeEntriesController extends BaseController
 
         return redirect()->to('/time/tracker')->with('success', 'Time entry saved successfully');
     }
+
+    public function heartbeat()
+    {
+        if (!auth()->user()) {
+            return $this->response->setStatusCode(401)->setJSON([
+                'status' => 'error',
+                'message' => 'Session expired. Please refresh and log in again.',
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'timestamp' => time(),
+        ]);
+    }
 }

@@ -341,7 +341,19 @@ document.getElementById('saveEntryChanges')?.addEventListener('click', async () 
 });
 <?php endif; ?>
 
+const TIMER_STORAGE_KEY = 'apms_timer_state';
+const HEARTBEAT_INTERVAL_MS = 240000; // 4 minutes keeps sessions alive for long runs
+
+const timerDisplayEl = document.getElementById('timerDisplay');
+const timerTaskEl = document.getElementById('timerTask');
+const timerDescriptionEl = document.getElementById('timerDescription');
+const timerStatusEl = document.getElementById('timerStatus');
+const startBtn = document.getElementById('startTimer');
+const pauseBtn = document.getElementById('pauseTimer');
+const stopBtn = document.getElementById('stopTimer');
+
 let timerInterval = null;
+let heartbeatInterval = null;
 let timerSeconds = 0;
 let timerRunning = false;
 let timerStartTime = null;
@@ -350,42 +362,175 @@ function updateTimerDisplay() {
     const hours = Math.floor(timerSeconds / 3600);
     const minutes = Math.floor((timerSeconds % 3600) / 60);
     const seconds = timerSeconds % 60;
-    
-    document.getElementById('timerDisplay').textContent = 
-        String(hours).padStart(2, '0') + ':' + 
-        String(minutes).padStart(2, '0') + ':' + 
-        String(seconds).padStart(2, '0');
+    timerDisplayEl.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function ensureHeartbeat() {
+    if (heartbeatInterval) {
+        return;
+    }
+
+    const heartbeat = async () => {
+        try {
+            const response = await fetch('<?= base_url('time/heartbeat') ?>', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    timerStatusEl.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Session expired. Log back in, then stop the timer to save.</span>';
+                    pauseTimer(false);
+                }
+                throw new Error('Heartbeat failed');
+            }
+        } catch (error) {
+            console.warn('Heartbeat error', error);
+        }
+    };
+
+    heartbeatInterval = setInterval(heartbeat, HEARTBEAT_INTERVAL_MS);
+    heartbeat();
+}
+
+function stopHeartbeat() {
+    if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+    }
+}
+
+function saveTimerState(overrides = {}) {
+    const payload = {
+        timerSeconds,
+        timerRunning,
+        timerStartMs: timerRunning ? Date.now() - (timerSeconds * 1000) : null,
+        taskId: timerTaskEl?.value || '',
+        description: timerDescriptionEl?.value || '',
+        ...overrides,
+    };
+
+    if (payload.timerRunning || payload.timerSeconds > 0) {
+        localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(payload));
+        ensureHeartbeat();
+    } else {
+        clearTimerState();
+    }
+}
+
+function clearTimerState() {
+    localStorage.removeItem(TIMER_STORAGE_KEY);
+    stopHeartbeat();
+}
+
+function ensureTaskOption(taskId) {
+    if (!timerTaskEl || !taskId) {
+        return;
+    }
+    const exists = Array.from(timerTaskEl.options).some((option) => option.value === taskId);
+    if (!exists) {
+        const option = document.createElement('option');
+        option.value = taskId;
+        option.textContent = `Task #${taskId}`;
+        timerTaskEl.appendChild(option);
+    }
+}
+
+function restoreTimerState() {
+    const raw = localStorage.getItem(TIMER_STORAGE_KEY);
+    if (!raw) {
+        updateTimerDisplay();
+        return;
+    }
+
+    try {
+        const state = JSON.parse(raw);
+        timerSeconds = parseInt(state.timerSeconds, 10) || 0;
+        timerRunning = !!state.timerRunning;
+
+        if (state.taskId) {
+            ensureTaskOption(state.taskId);
+            timerTaskEl.value = state.taskId;
+        }
+
+        if (state.description) {
+            timerDescriptionEl.value = state.description;
+        }
+
+        if (timerRunning && state.timerStartMs) {
+            const elapsed = Math.max(0, Math.floor((Date.now() - state.timerStartMs) / 1000));
+            timerSeconds = Math.max(timerSeconds, elapsed);
+            timerStartTime = Date.now() - (timerSeconds * 1000);
+            startTimer();
+            return;
+        }
+
+        if (timerSeconds > 0) {
+            timerStartTime = null;
+            timerRunning = false;
+            startBtn.disabled = false;
+            startBtn.innerHTML = '<i class="bi bi-play-fill"></i> Resume';
+            pauseBtn.disabled = true;
+            stopBtn.disabled = false;
+            timerTaskEl.disabled = true;
+            updateTimerDisplay();
+            timerStatusEl.innerHTML = '<span class="text-warning"><i class="bi bi-pause-circle-fill"></i> Timer paused</span>';
+            ensureHeartbeat();
+            return;
+        }
+
+        updateTimerDisplay();
+    } catch (error) {
+        console.warn('Failed to restore timer state', error);
+        clearTimerState();
+        updateTimerDisplay();
+    }
 }
 
 function startTimer() {
-    const taskSelect = document.getElementById('timerTask');
-    document.getElementById('startTimer').disabled = true;
-    document.getElementById('pauseTimer').disabled = false;
-    document.getElementById('stopTimer').disabled = false;
-    
+    if (timerRunning) {
+        return;
+    }
+
     timerRunning = true;
     timerStartTime = Date.now() - (timerSeconds * 1000);
-    
+
+    startBtn.disabled = true;
+    startBtn.innerHTML = '<i class="bi bi-play-fill"></i> Start';
+    pauseBtn.disabled = false;
+    stopBtn.disabled = false;
+    timerTaskEl.disabled = true;
+
     timerInterval = setInterval(() => {
         timerSeconds = Math.floor((Date.now() - timerStartTime) / 1000);
         updateTimerDisplay();
     }, 1000);
-    
-    document.getElementById('timerTask').disabled = true;
-    document.getElementById('timerStatus').innerHTML = '<span class="text-success"><i class="bi bi-circle-fill"></i> Timer running...</span>';
+
+    timerStatusEl.innerHTML = '<span class="text-success"><i class="bi bi-circle-fill"></i> Timer running...</span>';
+    saveTimerState();
 }
 
-function pauseTimer() {
+function pauseTimer(showMessage = true) {
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
-        timerRunning = false;
-        
-        document.getElementById('startTimer').disabled = false;
-        document.getElementById('startTimer').innerHTML = '<i class="bi bi-play-fill"></i> Resume';
-        document.getElementById('pauseTimer').disabled = true;
-        document.getElementById('timerStatus').innerHTML = '<span class="text-warning"><i class="bi bi-pause-circle-fill"></i> Timer paused</span>';
     }
+
+    if (!timerRunning && timerSeconds === 0) {
+        return;
+    }
+
+    timerRunning = false;
+    startBtn.disabled = false;
+    startBtn.innerHTML = '<i class="bi bi-play-fill"></i> Resume';
+    pauseBtn.disabled = true;
+    stopBtn.disabled = false;
+    timerTaskEl.disabled = true;
+
+    if (showMessage) {
+        timerStatusEl.innerHTML = '<span class="text-warning"><i class="bi bi-pause-circle-fill"></i> Timer paused</span>';
+    }
+
+    saveTimerState();
 }
 
 async function stopTimer() {
@@ -393,69 +538,102 @@ async function stopTimer() {
         clearInterval(timerInterval);
         timerInterval = null;
     }
-    
-    const selectedTask = document.getElementById('timerTask').value;
-    const taskId = selectedTask ? selectedTask : null;
-    const description = document.getElementById('timerDescription').value || 'Timed work session';
-    const hours = (timerSeconds / 3600).toFixed(2);
-    
-    if (hours < 0.01) {
+
+    if (timerSeconds <= 0) {
+        alert('No time recorded yet.');
+        resetTimer();
+        return;
+    }
+
+    timerRunning = false;
+    pauseBtn.disabled = true;
+    startBtn.disabled = true;
+    stopBtn.disabled = true;
+
+    const selectedTask = timerTaskEl.value;
+    const description = timerDescriptionEl.value || 'Timed work session';
+    const hoursFloat = parseFloat((timerSeconds / 3600).toFixed(2));
+
+    if (hoursFloat < 0.01) {
         alert('Timer must run for at least 1 minute');
         resetTimer();
         return;
     }
-    
+
     try {
         const response = await fetch('<?= base_url('api/time-entries') ?>', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
             },
             body: JSON.stringify({
-                task_id: taskId === "" ? null : taskId,
+                task_id: selectedTask === '' ? null : selectedTask,
                 date: new Date().toISOString().split('T')[0],
-                hours: parseFloat(hours),
-                description: description,
-                is_billable: 1
-            })
+                hours: hoursFloat,
+                description,
+                is_billable: 1,
+            }),
         });
-        
-        if (response.ok) {
-            alert(`Time entry saved: ${hours} hours`);
-            document.getElementById('timerStatus').innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Saved</span>';
-        } else {
-            const data = await response.json();
-            alert('Failed to save: ' + (data.message || 'Unknown error'));
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            const message = result.message || `Failed with status ${response.status}`;
+            throw new Error(message);
         }
+
+        alert(`Time entry saved: ${hoursFloat.toFixed(2)} hours`);
+        timerStatusEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Entry saved</span>';
+        resetTimer();
+        setTimeout(() => window.location.reload(), 500);
     } catch (error) {
-        alert('Error: ' + error.message);
+        timerStatusEl.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> ${error.message}. Timer paused so you can retry.</span>`;
+        startBtn.disabled = false;
+        startBtn.innerHTML = '<i class="bi bi-play-fill"></i> Resume';
+        pauseBtn.disabled = true;
+        stopBtn.disabled = false;
+        timerTaskEl.disabled = true;
+        saveTimerState();
     }
-    
-    resetTimer();
 }
 
 function resetTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+
     timerSeconds = 0;
     timerRunning = false;
     timerStartTime = null;
     updateTimerDisplay();
-    
-    document.getElementById('startTimer').disabled = false;
-    document.getElementById('startTimer').innerHTML = '<i class="bi bi-play-fill"></i> Start';
-    document.getElementById('pauseTimer').disabled = true;
-    document.getElementById('stopTimer').disabled = true;
-    document.getElementById('timerTask').disabled = false;
-    document.getElementById('timerTask').value = '';
-    document.getElementById('timerDescription').value = '';
-    document.getElementById('timerStatus').textContent = '';
+
+    startBtn.disabled = false;
+    startBtn.innerHTML = '<i class="bi bi-play-fill"></i> Start';
+    pauseBtn.disabled = true;
+    stopBtn.disabled = true;
+    timerTaskEl.disabled = false;
+    timerTaskEl.value = '';
+    timerDescriptionEl.value = '';
+    timerStatusEl.textContent = '';
+    clearTimerState();
 }
+
+timerDescriptionEl?.addEventListener('input', () => {
+    if (timerSeconds > 0 || timerRunning) {
+        saveTimerState();
+    }
+});
 
 window.addEventListener('beforeunload', (e) => {
     if (timerRunning) {
+        saveTimerState();
         e.preventDefault();
         e.returnValue = 'Timer is running. Are you sure you want to leave?';
     }
 });
+
+restoreTimerState();
 </script>
 <?= $this->endSection() ?>

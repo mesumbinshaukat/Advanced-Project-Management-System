@@ -17,6 +17,21 @@ $routes->match(['GET', 'POST'], 'register', static function() {
 
 $routes->get('/', 'Home::index');
 
+// Secret superadmin routes (encrypted)
+$routes->group('x9k2m8p5q7', function($routes) {
+    log_message('debug', 'Routes: Defining superadmin routes group');
+    $routes->get('login', 'SuperAdminController::login');
+    $routes->post('login', 'SuperAdminController::login');
+    $routes->get('dashboard', 'SuperAdminController::dashboard');
+    $routes->get('edit-time-entry/(:num)', 'SuperAdminController::editTimeEntry/$1');
+    $routes->post('edit-time-entry/(:num)', 'SuperAdminController::editTimeEntry/$1');
+    $routes->get('edit-check-in/(:num)', 'SuperAdminController::editCheckIn/$1');
+    $routes->post('edit-check-in/(:num)', 'SuperAdminController::editCheckIn/$1');
+    $routes->get('edit-user/(:num)', 'SuperAdminController::editUser/$1');
+    $routes->post('edit-user/(:num)', 'SuperAdminController::editUser/$1');
+    $routes->get('logout', 'SuperAdminController::logout');
+});
+
 $routes->group('', ['filter' => 'session'], function($routes) {
     $routes->get('dashboard', 'DashboardController::index');
     
@@ -49,6 +64,7 @@ $routes->group('', ['filter' => 'session'], function($routes) {
         $routes->get('/', 'TimeEntriesController::index');
         $routes->get('create', 'TimeEntriesController::create');
         $routes->get('tracker', 'TimeEntriesController::tracker');
+        $routes->get('heartbeat', 'TimeEntriesController::heartbeat');
         $routes->post('store', 'TimeEntriesController::store');
     });
     

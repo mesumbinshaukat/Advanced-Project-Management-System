@@ -361,6 +361,82 @@ $db_port = $env['database.default.port'] ?? 3306;
         }
         echo '</div>';
 
+        // Create system_config table and seed superadmin credentials
+        echo '<div class="step">';
+        echo '<h3>Step 5: Setting up System Configuration</h3>';
+        
+        // Create system_config table if it doesn't exist
+        echo '<div class="info">Checking for system_config table...</div>';
+        $tableCheck = $mysqli->query("SHOW TABLES LIKE 'system_config'");
+        if (!$tableCheck || $tableCheck->num_rows === 0) {
+            echo '<div class="info">Creating system_config table...</div>';
+            $createSystemConfig = "CREATE TABLE IF NOT EXISTS `system_config` (
+                `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `config_key` VARCHAR(255) NOT NULL,
+                `config_value` TEXT NULL,
+                `created_at` DATETIME NULL,
+                `updated_at` DATETIME NULL,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `config_key` (`config_key`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+            
+            if ($mysqli->query($createSystemConfig)) {
+                echo '<div class="success">Created system_config table</div>';
+                $added++;
+            } else {
+                echo '<div class="error">Error creating system_config table: ' . htmlspecialchars($mysqli->error) . '</div>';
+            }
+        } else {
+            echo '<div class="info">system_config table already exists</div>';
+            $skipped++;
+        }
+        
+        // Seed superadmin credentials (encrypted)
+        echo '<div class="info">Seeding superadmin credentials...</div>';
+        
+        // Check if superadmin credentials already exist
+        $checkSuperadmin = $mysqli->query("SELECT * FROM system_config WHERE config_key = 'superadmin_email'");
+        if (!$checkSuperadmin || $checkSuperadmin->num_rows === 0) {
+            // Encryption key and credentials
+            $encryptionKey = '7a3b9c2e8f1d6a5b4c9e2f8a1d7b3c9e2f8a1d7b3c9e2f8a1d7b3c9e2f8a1d7';
+            $email = 'hafizsyedhanzala@gmail.com';
+            $password = 'admin123';
+            $username = 'Hanzala';
+            
+            // Encrypt credentials
+            $iv = random_bytes(openssl_cipher_iv_length('aes-256-cbc'));
+            $encryptedEmail = base64_encode($iv . openssl_encrypt($email, 'aes-256-cbc', $encryptionKey, 0, $iv));
+            
+            $iv = random_bytes(openssl_cipher_iv_length('aes-256-cbc'));
+            $encryptedPassword = base64_encode($iv . openssl_encrypt($password, 'aes-256-cbc', $encryptionKey, 0, $iv));
+            
+            $iv = random_bytes(openssl_cipher_iv_length('aes-256-cbc'));
+            $encryptedUsername = base64_encode($iv . openssl_encrypt($username, 'aes-256-cbc', $encryptionKey, 0, $iv));
+            
+            // Insert encrypted credentials
+            $mysqli->begin_transaction();
+            try {
+                $mysqli->query("INSERT INTO system_config (config_key, config_value, created_at, updated_at) VALUES ('superadmin_email', '" . $mysqli->real_escape_string($encryptedEmail) . "', NOW(), NOW())");
+                $mysqli->query("INSERT INTO system_config (config_key, config_value, created_at, updated_at) VALUES ('superadmin_password', '" . $mysqli->real_escape_string($encryptedPassword) . "', NOW(), NOW())");
+                $mysqli->query("INSERT INTO system_config (config_key, config_value, created_at, updated_at) VALUES ('superadmin_username', '" . $mysqli->real_escape_string($encryptedUsername) . "', NOW(), NOW())");
+                $mysqli->commit();
+                
+                echo '<div class="success">Superadmin credentials seeded successfully (encrypted)</div>';
+                echo '<div class="info">Login URL: <code>/x9k2m8p5q7/login</code></div>';
+                echo '<div class="info">Email: hafizsyedhanzala@gmail.com</div>';
+                echo '<div class="info">Password: admin123</div>';
+                $added++;
+            } catch (Exception $e) {
+                $mysqli->rollback();
+                echo '<div class="error">Error seeding superadmin credentials: ' . htmlspecialchars($e->getMessage()) . '</div>';
+            }
+        } else {
+            echo '<div class="info">Superadmin credentials already exist</div>';
+            $skipped++;
+        }
+        
+        echo '</div>';
+
         // Apply 2026-02-16-180000_UpdateProjectsClientAndBudget migration logic
         echo '<div class="step">';
         echo '<h3>Step 4: Applying migration 2026-02-16-180000_UpdateProjectsClientAndBudget</h3>';
