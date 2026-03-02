@@ -6,6 +6,8 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 
+$routes->get('/', 'Home::index');
+
 // Register Shield auth routes but disable public registration
 $authRoutes = service('auth')->routes($routes);
 
@@ -15,21 +17,36 @@ $routes->match(['GET', 'POST'], 'register', static function() {
     return redirect()->to('login')->with('error', 'User registration is disabled. Contact an administrator to create an account.');
 });
 
-$routes->get('/', 'Home::index');
-
-// Secret superadmin routes (encrypted)
+// Secret superadmin routes (encrypted) - MUST be after Shield auth routes
 $routes->group('x9k2m8p5q7', function($routes) {
-    log_message('debug', 'Routes: Defining superadmin routes group');
+    // Authentication
     $routes->get('login', 'SuperAdminController::login');
     $routes->post('login', 'SuperAdminController::login');
+    $routes->get('logout', 'SuperAdminController::logout');
+    
+    // Dashboard
     $routes->get('dashboard', 'SuperAdminController::dashboard');
+    
+    // Time Entries
+    $routes->get('create-time-entry', 'SuperAdminController::createTimeEntry');
+    $routes->post('create-time-entry', 'SuperAdminController::createTimeEntry');
     $routes->get('edit-time-entry/(:num)', 'SuperAdminController::editTimeEntry/$1');
     $routes->post('edit-time-entry/(:num)', 'SuperAdminController::editTimeEntry/$1');
+    $routes->post('delete-time-entry/(:num)', 'SuperAdminController::deleteTimeEntry/$1');
+    
+    // Check-ins
+    $routes->get('create-check-in', 'SuperAdminController::createCheckIn');
+    $routes->post('create-check-in', 'SuperAdminController::createCheckIn');
     $routes->get('edit-check-in/(:num)', 'SuperAdminController::editCheckIn/$1');
     $routes->post('edit-check-in/(:num)', 'SuperAdminController::editCheckIn/$1');
+    $routes->post('delete-check-in/(:num)', 'SuperAdminController::deleteCheckIn/$1');
+    
+    // Users
+    $routes->get('create-user', 'SuperAdminController::createUser');
+    $routes->post('create-user', 'SuperAdminController::createUser');
     $routes->get('edit-user/(:num)', 'SuperAdminController::editUser/$1');
     $routes->post('edit-user/(:num)', 'SuperAdminController::editUser/$1');
-    $routes->get('logout', 'SuperAdminController::logout');
+    $routes->post('delete-user/(:num)', 'SuperAdminController::deleteUser/$1');
 });
 
 $routes->group('', ['filter' => 'session'], function($routes) {

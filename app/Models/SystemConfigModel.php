@@ -34,11 +34,34 @@ class SystemConfigModel extends Model
 
     private function decrypt($data)
     {
-        $data = base64_decode($data);
-        $ivLength = openssl_cipher_iv_length('aes-256-cbc');
-        $iv = substr($data, 0, $ivLength);
-        $encrypted = substr($data, $ivLength);
-        return openssl_decrypt($encrypted, 'aes-256-cbc', $this->encryptionKey, 0, $iv);
+        try {
+            $data = base64_decode($data, true);
+            if ($data === false) {
+                log_message('error', 'SystemConfigModel::decrypt() - base64_decode failed');
+                return null;
+            }
+
+            $ivLength = openssl_cipher_iv_length('aes-256-cbc');
+            if (strlen($data) < $ivLength) {
+                log_message('error', 'SystemConfigModel::decrypt() - Data too short to contain IV');
+                return null;
+            }
+
+            $iv = substr($data, 0, $ivLength);
+            $encrypted = substr($data, $ivLength);
+            
+            $decrypted = openssl_decrypt($encrypted, 'aes-256-cbc', $this->encryptionKey, 0, $iv);
+            
+            if ($decrypted === false) {
+                log_message('error', 'SystemConfigModel::decrypt() - openssl_decrypt failed');
+                return null;
+            }
+            
+            return $decrypted;
+        } catch (\Exception $e) {
+            log_message('error', 'SystemConfigModel::decrypt() - Exception: ' . $e->getMessage());
+            return null;
+        }
     }
 
     public function setConfig($key, $value)
@@ -49,11 +72,25 @@ class SystemConfigModel extends Model
 
     public function getConfig($key)
     {
+        log_message('debug', 'SystemConfigModel::getConfig() - Fetching config key: ' . $key);
+        
         $config = $this->where('config_key', $key)->first();
-        if ($config) {
-            return $this->decrypt($config['config_value']);
+        if (!$config) {
+            log_message('error', 'SystemConfigModel::getConfig() - Config key not found in database: ' . $key);
+            return null;
         }
-        return null;
+
+        log_message('debug', 'SystemConfigModel::getConfig() - Config found, attempting decryption');
+        
+        $decrypted = $this->decrypt($config['config_value']);
+        
+        if ($decrypted === null) {
+            log_message('error', 'SystemConfigModel::getConfig() - Decryption failed for key: ' . $key);
+            return null;
+        }
+
+        log_message('debug', 'SystemConfigModel::getConfig() - Decryption successful for key: ' . $key);
+        return $decrypted;
     }
 
     public function hasConfig($key)

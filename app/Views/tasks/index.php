@@ -1,5 +1,67 @@
 <?= $this->extend('layouts/main') ?>
 
+<?= $this->section('styles') ?>
+<style>
+    @media (max-width: 768px) {
+        .d-flex.justify-content-between {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1rem;
+        }
+
+        .btn-primary {
+            width: 100%;
+        }
+
+        .table {
+            font-size: 0.875rem;
+        }
+
+        .table th {
+            font-size: 0.75rem;
+        }
+
+        .badge {
+            font-size: 0.65rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.75rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        h2 {
+            font-size: 1.25rem;
+        }
+
+        .table {
+            font-size: 0.7rem;
+        }
+
+        .table th {
+            font-size: 0.65rem;
+            padding: 0.35rem 0.25rem;
+        }
+
+        .table td {
+            padding: 0.35rem 0.25rem;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.65rem;
+        }
+
+        .card-body {
+            padding: 0.75rem;
+        }
+    }
+</style>
+<?= $this->endSection() ?>
+
 <?= $this->section('content') ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">

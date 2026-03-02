@@ -1,5 +1,78 @@
 <?= $this->extend('layouts/main') ?>
 
+<?= $this->section('styles') ?>
+<style>
+    @media (max-width: 768px) {
+        .col-md-8,
+        .col-md-4 {
+            width: 100%;
+        }
+
+        .text-md-end {
+            text-align: left !important;
+        }
+
+        .mt-md-0 {
+            margin-top: 1rem !important;
+        }
+
+        .col-md-6,
+        .col-lg-4 {
+            width: 100%;
+        }
+
+        .card {
+            margin-bottom: 1rem;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .d-flex.justify-content-between {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 0.5rem;
+        }
+
+        .btn-outline-primary {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        h2 {
+            font-size: 1.25rem;
+        }
+
+        .card-title {
+            font-size: 1rem;
+        }
+
+        .badge {
+            font-size: 0.65rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.75rem;
+            width: 100%;
+        }
+
+        .progress {
+            height: 6px !important;
+        }
+
+        .alert {
+            padding: 0.5rem;
+            font-size: 0.875rem;
+        }
+    }
+</style>
+<?= $this->endSection() ?>
+
 <?= $this->section('content') ?>
 
 <div class="row mb-4 align-items-center">

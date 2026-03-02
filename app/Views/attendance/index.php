@@ -53,6 +53,118 @@
         .attendance-map-wrapper {
             overflow-x: auto;
         }
+
+        .col-lg-6 {
+            width: 100%;
+        }
+
+        .col-lg-4 {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .row.g-3 {
+            gap: 0.75rem !important;
+        }
+
+        .col-md-4 {
+            width: 100%;
+        }
+
+        .form-label {
+            font-size: 0.875rem;
+        }
+
+        .form-select,
+        .form-control {
+            font-size: 0.875rem;
+            padding: 0.4rem 0.6rem;
+        }
+
+        .stat-chip {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+        }
+
+        .attendance-dot {
+            width: 16px;
+            height: 16px;
+            font-size: 0.6rem;
+        }
+
+        .attendance-map {
+            max-width: 100%;
+        }
+
+        .table {
+            font-size: 0.875rem;
+        }
+
+        .table th {
+            font-size: 0.75rem;
+        }
+
+        .badge {
+            font-size: 0.65rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.75rem;
+        }
+
+        .card-header {
+            padding: 0.75rem 1rem;
+        }
+
+        .card-body {
+            padding: 0.75rem 1rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        h2 {
+            font-size: 1.25rem;
+        }
+
+        .row.g-4 {
+            gap: 0.5rem !important;
+        }
+
+        .table {
+            font-size: 0.7rem;
+        }
+
+        .table th {
+            font-size: 0.65rem;
+            padding: 0.35rem 0.25rem;
+        }
+
+        .table td {
+            padding: 0.35rem 0.25rem;
+        }
+
+        .attendance-dot {
+            width: 14px;
+            height: 14px;
+            font-size: 0.55rem;
+        }
+
+        .stat-chip {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.65rem;
+        }
+
+        .card-body {
+            padding: 0.5rem 0.75rem;
+        }
     }
 
     .chart-wrapper {

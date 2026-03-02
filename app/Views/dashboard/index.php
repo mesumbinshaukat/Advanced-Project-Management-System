@@ -1,5 +1,81 @@
 <?= $this->extend('layouts/main') ?>
 
+<?= $this->section('styles') ?>
+<style>
+    @media (max-width: 768px) {
+        .card-header {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1rem;
+        }
+
+        .card-header > div:last-child {
+            width: 100%;
+            flex-direction: column;
+        }
+
+        .card-header .btn {
+            width: 100%;
+        }
+
+        .table-responsive {
+            font-size: 0.875rem;
+        }
+
+        .progress {
+            min-width: auto !important;
+        }
+
+        .list-group-item {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+
+        .list-group-item .btn {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .row > [class*="col-"] {
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+        }
+
+        .table {
+            font-size: 0.75rem;
+        }
+
+        .badge {
+            font-size: 0.65rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.75rem;
+        }
+
+        .card-header {
+            padding: 0.75rem 1rem;
+        }
+
+        .card-body {
+            padding: 0.75rem 1rem;
+        }
+    }
+</style>
+<?= $this->endSection() ?>
+
 <?= $this->section('content') ?>
 
 <?php if ($isAdmin): ?>

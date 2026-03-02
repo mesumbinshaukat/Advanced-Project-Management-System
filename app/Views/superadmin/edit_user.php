@@ -1,33 +1,40 @@
 <?= $this->extend('layouts/superadmin') ?>
 
 <?= $this->section('content') ?>
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid py-4 px-3 px-md-4">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
         <h1 class="h3 mb-0">Edit User</h1>
-        <a href="<?= base_url('/x9k2m8p5q7/dashboard') ?>" class="btn btn-outline-secondary">Back to Dashboard</a>
+        <a href="<?= base_url('/x9k2m8p5q7/dashboard') ?>" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
     </div>
 
-    <div class="row">
+    <?php if (session()->getFlashdata('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <?= session()->getFlashdata('error') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <?php endif; ?>
+
+    <div class="row g-3">
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-body">
-                    <form method="post" action="<?= base_url('/x9k2m8p5q7/edit-user/' . $user['id']) ?>">
+                    <form method="post" action="<?= base_url('/x9k2m8p5q7/edit-user/' . $user['id']) ?>" novalidate>
                         <?= csrf_field() ?>
                         
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
+                        <div class="row g-3">
+                            <div class="col-12 col-sm-6">
                                 <label for="username" class="form-label">Username</label>
                                 <input type="text" class="form-control" id="username" 
                                        name="username" value="<?= esc($user['username']) ?>" required>
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-12 col-sm-6">
                                 <label for="email" class="form-label">Email</label>
                                 <input type="email" class="form-control" id="email" 
                                        name="email" value="<?= esc($user['email']) ?>">
                             </div>
                         </div>
 
-                        <div class="mb-3">
+                        <div class="mt-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="active" 
                                        name="active" <?= $user['active'] ? 'checked' : '' ?>>
@@ -37,16 +44,23 @@
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <small class="text-muted">
-                                    User ID: <?= $user['id'] ?> | 
+                        <div class="mt-4 pt-3 border-top">
+                            <div class="mb-3">
+                                <small class="text-muted d-block">
+                                    User ID: <?= $user['id'] ?>
+                                </small>
+                                <small class="text-muted d-block">
                                     Created: <?= $user['created_at'] ?>
                                 </small>
                             </div>
-                            <div>
+                            <div class="d-flex flex-column flex-sm-row gap-2">
                                 <button type="submit" class="btn btn-primary">Update User</button>
                                 <a href="<?= base_url('/x9k2m8p5q7/dashboard') ?>" class="btn btn-outline-secondary">Cancel</a>
+                                <form method="post" action="<?= base_url('/x9k2m8p5q7/delete-user/' . $user['id']) ?>" 
+                                      style="display:inline;" onsubmit="return confirm('Delete this user? This action cannot be undone.');">
+                                    <?= csrf_field() ?>
+                                    <button type="submit" class="btn btn-outline-danger">Delete</button>
+                                </form>
                             </div>
                         </div>
                     </form>
@@ -59,18 +73,34 @@
                     <h5 class="mb-0">User Details</h5>
                 </div>
                 <div class="card-body">
-                    <p><strong>User ID:</strong> <?= $user['id'] ?></p>
-                    <p><strong>Username:</strong> <?= esc($user['username']) ?></p>
-                    <p><strong>Email:</strong> <?= esc($user['email'] ?? '-') ?></p>
-                    <p><strong>Status:</strong> 
+                    <div class="mb-2">
+                        <small class="text-muted d-block">User ID</small>
+                        <strong><?= $user['id'] ?></strong>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Username</small>
+                        <strong><?= esc($user['username']) ?></strong>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Email</small>
+                        <strong><?= esc($user['email'] ?? '-') ?></strong>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Status</small>
                         <?php if ($user['active']): ?>
                         <span class="badge bg-success">Active</span>
                         <?php else: ?>
                         <span class="badge bg-secondary">Inactive</span>
                         <?php endif; ?>
-                    </p>
-                    <p><strong>Created:</strong> <?= $user['created_at'] ?></p>
-                    <p><strong>Last Active:</strong> <?= $user['last_active'] ?? 'Never' ?></p>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Created</small>
+                        <strong><?= $user['created_at'] ?></strong>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">Last Active</small>
+                        <strong><?= $user['last_active'] ?? 'Never' ?></strong>
+                    </div>
                 </div>
             </div>
         </div>

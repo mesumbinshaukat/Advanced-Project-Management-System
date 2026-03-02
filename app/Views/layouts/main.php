@@ -177,9 +177,39 @@
             letter-spacing: 0.05em;
         }
         
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #475569;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
         @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 260px;
+            }
+
             .sidebar {
                 transform: translateX(-100%);
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
             }
             
             .sidebar.show {
@@ -188,13 +218,79 @@
             
             .main-content {
                 margin-left: 0;
+                padding: 1rem;
+            }
+
+            .topbar {
+                margin: -1rem -1rem 1rem -1rem;
+                padding: 1rem;
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .sidebar-toggle {
+                display: block;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .card {
+                margin-bottom: 1rem;
+            }
+
+            .table {
+                font-size: 0.875rem;
+            }
+
+            .btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.875rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 0.75rem;
+            }
+
+            .topbar {
+                margin: -0.75rem -0.75rem 1rem -0.75rem;
+                padding: 0.75rem;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .topbar > div:last-child {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .stat-value {
+                font-size: 1.25rem;
+            }
+
+            h4 {
+                font-size: 1.25rem;
+            }
+
+            .table {
+                font-size: 0.75rem;
+            }
+
+            .badge {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.5rem;
             }
         }
     </style>
     <?= $this->renderSection('styles') ?>
 </head>
 <body>
-    <div class="sidebar">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-brand">
             <i class="bi bi-kanban"></i> PM System
         </div>
@@ -290,7 +386,10 @@
 
     <div class="main-content">
         <div class="topbar">
-            <div>
+            <div class="d-flex align-items-center gap-2">
+                <button class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar">
+                    <i class="bi bi-list"></i>
+                </button>
                 <h4 class="mb-0"><?= esc($title ?? 'Dashboard') ?></h4>
             </div>
             <div class="d-flex align-items-center gap-3">
@@ -320,6 +419,45 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar toggle functionality
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                sidebar.classList.toggle('show');
+                sidebarOverlay.classList.toggle('show');
+            });
+        }
+
+        // Close sidebar when overlay is clicked
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', function() {
+                sidebar.classList.remove('show');
+                sidebarOverlay.classList.remove('show');
+            });
+        }
+
+        // Close sidebar when a link is clicked
+        const sidebarLinks = document.querySelectorAll('.sidebar-nav-link');
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                sidebar.classList.remove('show');
+                sidebarOverlay.classList.remove('show');
+            });
+        });
+
+        // Close sidebar on window resize if screen becomes larger
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('show');
+                sidebarOverlay.classList.remove('show');
+            }
+        });
+    </script>
     <?= $this->renderSection('scripts') ?>
 </body>
 </html>
