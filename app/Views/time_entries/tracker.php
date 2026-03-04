@@ -343,6 +343,7 @@ document.getElementById('saveEntryChanges')?.addEventListener('click', async () 
 
 const TIMER_STORAGE_KEY = 'apms_timer_state';
 const HEARTBEAT_INTERVAL_MS = 240000; // 4 minutes keeps sessions alive for long runs
+const TIMER_EXPIRY_HOURS = 24; // Timer data expires after 24 hours
 
 const timerDisplayEl = document.getElementById('timerDisplay');
 const timerTaskEl = document.getElementById('timerTask');
@@ -406,6 +407,8 @@ function saveTimerState(overrides = {}) {
         timerStartMs: timerRunning ? Date.now() - (timerSeconds * 1000) : null,
         taskId: timerTaskEl?.value || '',
         description: timerDescriptionEl?.value || '',
+        savedAt: Date.now(), // Add timestamp for 24hr expiry
+        expiresAt: Date.now() + (TIMER_EXPIRY_HOURS * 60 * 60 * 1000), // 24 hours from now
         ...overrides,
     };
 
@@ -444,6 +447,17 @@ function restoreTimerState() {
 
     try {
         const state = JSON.parse(raw);
+        
+        // Check if timer data has expired (24 hours)
+        if (state.expiresAt && Date.now() > state.expiresAt) {
+            console.log('Timer data expired after 24 hours, clearing state');
+            timerStatusEl.innerHTML = '<span class="text-info"><i class="bi bi-info-circle-fill"></i> Previous timer session expired after 24 hours</span>';
+            clearTimerState();
+            updateTimerDisplay();
+            setTimeout(() => timerStatusEl.textContent = '', 5000);
+            return;
+        }
+        
         timerSeconds = parseInt(state.timerSeconds, 10) || 0;
         timerRunning = !!state.timerRunning;
 
@@ -459,8 +473,26 @@ function restoreTimerState() {
         if (timerRunning && state.timerStartMs) {
             const elapsed = Math.max(0, Math.floor((Date.now() - state.timerStartMs) / 1000));
             timerSeconds = Math.max(timerSeconds, elapsed);
+            
+            // Reset timerRunning to false so startTimer can properly start it
+            timerRunning = false;
             timerStartTime = Date.now() - (timerSeconds * 1000);
-            startTimer();
+            
+            // Show restoration message for running timer
+            const restoredHours = Math.floor(timerSeconds / 3600);
+            const restoredMinutes = Math.floor((timerSeconds % 3600) / 60);
+            let restoredTime = '';
+            if (restoredHours > 0) {
+                restoredTime = `${restoredHours}h ${restoredMinutes}m`;
+            } else {
+                restoredTime = `${restoredMinutes}m`;
+            }
+            // Update display immediately before starting timer
+            updateTimerDisplay();
+            
+            timerStatusEl.innerHTML = `<span class="text-success"><i class="bi bi-arrow-clockwise"></i> Timer restored and resumed (${restoredTime} recovered)</span>`;
+            
+            startTimer(true); // Skip status update to preserve restoration message
             return;
         }
 
@@ -473,7 +505,18 @@ function restoreTimerState() {
             stopBtn.disabled = false;
             timerTaskEl.disabled = true;
             updateTimerDisplay();
-            timerStatusEl.innerHTML = '<span class="text-warning"><i class="bi bi-pause-circle-fill"></i> Timer paused</span>';
+            
+            // Show restoration message for paused timer
+            const pausedHours = Math.floor(timerSeconds / 3600);
+            const pausedMinutes = Math.floor((timerSeconds % 3600) / 60);
+            let pausedTime = '';
+            if (pausedHours > 0) {
+                pausedTime = `${pausedHours}h ${pausedMinutes}m`;
+            } else {
+                pausedTime = `${pausedMinutes}m`;
+            }
+            timerStatusEl.innerHTML = `<span class="text-warning"><i class="bi bi-pause-circle-fill"></i> Timer restored and paused (${pausedTime} recovered)</span>`;
+            
             ensureHeartbeat();
             return;
         }
@@ -486,7 +529,7 @@ function restoreTimerState() {
     }
 }
 
-function startTimer() {
+function startTimer(skipStatusUpdate = false) {
     if (timerRunning) {
         return;
     }
@@ -505,7 +548,10 @@ function startTimer() {
         updateTimerDisplay();
     }, 1000);
 
-    timerStatusEl.innerHTML = '<span class="text-success"><i class="bi bi-circle-fill"></i> Timer running...</span>';
+    // Only update status if not skipping (during restoration)
+    if (!skipStatusUpdate) {
+        timerStatusEl.innerHTML = '<span class="text-success"><i class="bi bi-circle-fill"></i> Timer running...</span>';
+    }
     saveTimerState();
 }
 

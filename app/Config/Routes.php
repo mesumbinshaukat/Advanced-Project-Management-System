@@ -64,6 +64,7 @@ $routes->group('', ['filter' => 'session'], function($routes) {
         $routes->get('/', 'TasksController::index');
         $routes->get('view/(:num)', 'TasksController::view/$1');
         $routes->get('kanban/(:num)', 'TasksController::kanban/$1');
+        $routes->get('review-requests', 'TasksController::reviewRequests', ['filter' => 'role:admin']);
         $routes->get('create', 'TasksController::create', ['filter' => 'permission:tasks.create']);
         $routes->get('create/(:num)', 'TasksController::create/$1', ['filter' => 'permission:tasks.create']);
         $routes->get('edit/(:num)', 'TasksController::edit/$1', ['filter' => 'permission:tasks.edit']);
@@ -164,6 +165,10 @@ $routes->group('', ['filter' => 'session'], function($routes) {
             $routes->post('(:num)/assign', 'Api\ProjectsController::assignUser/$1', ['filter' => 'permission:projects.assign']);
             $routes->delete('(:num)/users/(:num)', 'Api\ProjectsController::removeUser/$1/$2', ['filter' => 'permission:projects.assign']);
             $routes->get('check-name', 'Api\ProjectsController::checkName', ['filter' => 'permission:projects.create']);
+            $routes->get('(:num)/credentials', 'Api\ProjectsController::getCredentials/$1');
+            $routes->post('(:num)/credentials', 'Api\ProjectsController::addCredential/$1', ['filter' => 'role:admin']);
+            $routes->put('(:num)/credentials/(:num)', 'Api\ProjectsController::updateCredential/$1/$2', ['filter' => 'role:admin']);
+            $routes->delete('(:num)/credentials/(:num)', 'Api\ProjectsController::deleteCredential/$1/$2', ['filter' => 'role:admin']);
         });
         
         $routes->group('tasks', ['filter' => 'permission:tasks.view.assigned,tasks.view.all'], function($routes) {
@@ -173,6 +178,8 @@ $routes->group('', ['filter' => 'session'], function($routes) {
             $routes->put('(:num)', 'Api\TasksController::update/$1');
             $routes->delete('(:num)', 'Api\TasksController::delete/$1', ['filter' => 'permission:tasks.delete']);
             $routes->post('(:num)/status', 'Api\TasksController::updateStatus/$1', ['filter' => 'permission:tasks.update.status']);
+            $routes->post('(:num)/submit-review', 'Api\TasksController::submitForReview/$1');
+            $routes->post('(:num)/review', 'Api\TasksController::reviewTask/$1', ['filter' => 'role:admin']);
         });
         
         $routes->group('clients', ['filter' => 'role:admin'], function($routes) {

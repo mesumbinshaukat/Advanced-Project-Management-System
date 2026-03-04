@@ -33,15 +33,30 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label for="assigned_to" class="form-label">Assign To</label>
-                            <select class="form-select" id="assigned_to" name="assigned_to">
-                                <option value="">Unassigned</option>
+                            <label class="form-label">Assign To (Multiple Developers)</label>
+                            <div id="selectedDevelopers" class="mb-2 p-2 bg-light rounded" style="min-height: 40px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+                                <span class="text-muted" id="noDevelopersText">No developers selected</span>
+                            </div>
+                            
+                            <div class="border rounded p-3" style="max-height: 250px; overflow-y: auto;">
                                 <?php foreach ($users as $user): ?>
-                                <option value="<?= $user['id'] ?>" <?= $user['id'] == $task['assigned_to'] ? 'selected' : '' ?>>
-                                    <?= esc($user['username']) ?>
-                                </option>
+                                <div class="form-check mb-2">
+                                    <input 
+                                        class="form-check-input developer-checkbox" 
+                                        type="checkbox" 
+                                        id="developer_<?= $user['id'] ?>" 
+                                        name="assigned_to[]" 
+                                        value="<?= $user['id'] ?>"
+                                        data-username="<?= esc($user['username']) ?>"
+                                        <?= in_array($user['id'], $assigned_user_ids ?? []) ? 'checked' : '' ?>
+                                    >
+                                    <label class="form-check-label" for="developer_<?= $user['id'] ?>">
+                                        <?= esc($user['username']) ?>
+                                    </label>
+                                </div>
                                 <?php endforeach; ?>
-                            </select>
+                            </div>
+                            <small class="form-text text-muted d-block mt-2">Select one or more team members to assign this task.</small>
                         </div>
                     </div>
 
@@ -81,7 +96,7 @@
 
                         <div class="col-md-6 mb-3">
                             <label for="due_date" class="form-label">Due Date</label>
-                            <input type="date" class="form-control" id="due_date" name="due_date" value="<?= $task['due_date'] ?? '' ?>">
+                            <input type="date" class="form-control" id="due_date" name="due_date" value="<?= $task['deadline'] ? date('Y-m-d', strtotime($task['deadline'])) : '' ?>">
                         </div>
                     </div>
 
@@ -115,10 +130,55 @@
 
 <?= $this->section('scripts') ?>
 <script>
-// Show/hide blocker reason field
-document.getElementById('is_blocked').addEventListener('change', function() {
-    document.getElementById('blockerReasonDiv').style.display = this.checked ? 'block' : 'none';
+// Handle developer checkbox selection and display
+function updateSelectedDevelopers() {
+    const checkboxes = document.querySelectorAll('.developer-checkbox:checked');
+    const selectedDevelopersDiv = document.getElementById('selectedDevelopers');
+    
+    if (checkboxes.length === 0) {
+        selectedDevelopersDiv.innerHTML = '<span class="text-muted" id="noDevelopersText">No developers selected</span>';
+    } else {
+        let html = '';
+        checkboxes.forEach(checkbox => {
+            const username = checkbox.dataset.username;
+            const userId = checkbox.value;
+            html += `<span class="badge bg-primary d-flex align-items-center gap-2">
+                ${username}
+                <button type="button" class="btn-close btn-close-white" data-user-id="${userId}" style="font-size: 0.7rem;"></button>
+            </span>`;
+        });
+        selectedDevelopersDiv.innerHTML = html;
+        
+        // Add click handlers to remove badges
+        selectedDevelopersDiv.querySelectorAll('.btn-close').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const userId = btn.dataset.userId;
+                document.getElementById(`developer_${userId}`).checked = false;
+                updateSelectedDevelopers();
+            });
+        });
+    }
+}
+
+// Add event listeners to all checkboxes
+document.querySelectorAll('.developer-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateSelectedDevelopers);
 });
+
+// Initialize selected developers display
+updateSelectedDevelopers();
+
+// Show/hide blocker reason field
+const isBlockedCheckbox = document.getElementById('is_blocked');
+if (isBlockedCheckbox) {
+    isBlockedCheckbox.addEventListener('change', function() {
+        const blockerReasonDiv = document.getElementById('blockerReasonDiv');
+        if (blockerReasonDiv) {
+            blockerReasonDiv.style.display = this.checked ? 'block' : 'none';
+        }
+    });
+}
 
 document.getElementById('taskForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -126,11 +186,16 @@ document.getElementById('taskForm').addEventListener('submit', async (e) => {
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
     
+    // Handle multiple assignees from checkboxes
+    const checkedBoxes = document.querySelectorAll('.developer-checkbox:checked');
+    const assignedUserIds = Array.from(checkedBoxes).map(checkbox => checkbox.value);
+    data.assigned_to = assignedUserIds.length > 0 ? assignedUserIds : [];
+    
     // Handle checkbox
     data.is_blocked = formData.get('is_blocked') ? 1 : 0;
     
     // Convert empty strings to null for optional fields
-    ['description', 'assigned_to', 'estimated_hours', 'start_date', 'due_date', 'blocker_reason'].forEach(field => {
+    ['description', 'estimated_hours', 'start_date', 'due_date', 'blocker_reason'].forEach(field => {
         if (data[field] === '') data[field] = null;
     });
     

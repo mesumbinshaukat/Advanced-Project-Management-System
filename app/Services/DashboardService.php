@@ -228,16 +228,61 @@ class DashboardService
 
     public function getDeveloperDashboard($userId)
     {
-        $myTasks = $this->taskModel
+        $db = \Config\Database::connect();
+        
+        // Get tasks assigned via legacy assigned_to field
+        $legacyTasks = $this->taskModel
             ->select('tasks.*, projects.name as project_name')
             ->join('projects', 'projects.id = tasks.project_id')
             ->where('tasks.assigned_to', $userId)
             ->whereIn('tasks.status', ['backlog', 'todo', 'in_progress', 'review'])
             ->where('tasks.deleted_at', null)
-            ->orderBy('tasks.status', 'ASC')
-            ->orderBy('tasks.priority', 'DESC')
-            ->orderBy('tasks.deadline', 'ASC')
             ->findAll();
+
+        // Get tasks assigned via task_assignments table (new multi-assignment system)
+        $newTasks = $db->table('tasks')
+            ->select('tasks.*, projects.name as project_name')
+            ->join('projects', 'projects.id = tasks.project_id')
+            ->join('task_assignments', 'task_assignments.task_id = tasks.id')
+            ->where('task_assignments.user_id', $userId)
+            ->whereIn('tasks.status', ['backlog', 'todo', 'in_progress', 'review'])
+            ->where('tasks.deleted_at', null)
+            ->get()
+            ->getResultArray();
+
+        // Merge and deduplicate tasks
+        $taskIds = [];
+        $myTasks = [];
+        
+        foreach ($legacyTasks as $task) {
+            if (!in_array($task['id'], $taskIds)) {
+                $taskIds[] = $task['id'];
+                $myTasks[] = $task;
+            }
+        }
+        
+        foreach ($newTasks as $task) {
+            if (!in_array($task['id'], $taskIds)) {
+                $taskIds[] = $task['id'];
+                $myTasks[] = $task;
+            }
+        }
+        
+        // Sort by status, priority, and deadline
+        usort($myTasks, function($a, $b) {
+            $statusOrder = ['backlog' => 0, 'todo' => 1, 'in_progress' => 2, 'review' => 3];
+            $priorityOrder = ['low' => 0, 'medium' => 1, 'high' => 2, 'urgent' => 3];
+            
+            if ($statusOrder[$a['status']] !== $statusOrder[$b['status']]) {
+                return $statusOrder[$a['status']] - $statusOrder[$b['status']];
+            }
+            
+            if ($priorityOrder[$a['priority']] !== $priorityOrder[$b['priority']]) {
+                return $priorityOrder[$b['priority']] - $priorityOrder[$a['priority']];
+            }
+            
+            return strtotime($a['deadline'] ?? '2099-12-31') - strtotime($b['deadline'] ?? '2099-12-31');
+        });
 
         $myProjects = $this->projectModel
             ->select('projects.*')

@@ -8,7 +8,19 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><?= esc($task['title']) ?></h5>
                 <div>
-                    <a href="<?= base_url('tasks/edit/' . $task['id']) ?>" class="btn btn-sm btn-primary">Edit</a>
+                    <?php if ($isAdmin): ?>
+                        <a href="<?= base_url('tasks/edit/' . $task['id']) ?>" class="btn btn-sm btn-primary">Edit</a>
+                    <?php else: ?>
+                        <?php if (in_array($task['status'], ['todo', 'in_progress'])): ?>
+                            <button class="btn btn-sm btn-success" onclick="submitTaskForReview(<?= $task['id'] ?>)">
+                                <i class="bi bi-check-circle"></i> Request Review
+                            </button>
+                        <?php elseif ($task['status'] === 'submitted_for_review'): ?>
+                            <span class="badge bg-info">Review Requested</span>
+                        <?php elseif ($task['status'] === 'needs_revision'): ?>
+                            <span class="badge bg-warning">Needs Revision</span>
+                        <?php endif; ?>
+                    <?php endif; ?>
                     <a href="<?= base_url('tasks') ?>" class="btn btn-sm btn-secondary">Back</a>
                 </div>
             </div>
@@ -39,7 +51,15 @@
                     </div>
                     <div class="col-md-6">
                         <h6 class="text-muted">Assigned To</h6>
-                        <p><?= $task['assigned_to'] ? esc($task['assigned_username'] ?? 'Unknown') : 'Unassigned' ?></p>
+                        <p>
+                            <?php if (!empty($assigned_developers)): ?>
+                                <?php foreach ($assigned_developers as $developer): ?>
+                                    <span class="badge bg-primary"><?= esc($developer['username']) ?></span>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <span class="text-muted">Unassigned</span>
+                            <?php endif; ?>
+                        </p>
                     </div>
                 </div>
 
@@ -121,4 +141,37 @@
     </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+// Submit task for review function
+async function submitTaskForReview(taskId) {
+    if (!confirm('Are you sure you want to submit this task for review?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`<?= base_url('api/tasks/') ?>${taskId}/submit-review`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('Task submitted for review successfully!');
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to submit task for review');
+        }
+    } catch (error) {
+        console.error('Error submitting task for review:', error);
+        alert('Error submitting task for review');
+    }
+}
+</script>
 <?= $this->endSection() ?>

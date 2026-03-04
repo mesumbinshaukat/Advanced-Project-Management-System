@@ -23,6 +23,7 @@ $is_admin = $is_admin ?? false;
                             <?php foreach ($projects as $project): ?>
                             <option value="<?= $project['id'] ?>" 
                                 data-priority="<?= esc($project['priority'] ?? 'medium') ?>"
+                                data-deadline="<?= esc($project['deadline'] ?? '') ?>"
                                 <?= ($selected_project_id == $project['id']) ? 'selected' : '' ?>>
                                 <?= esc($project['name']) ?>
                             </option>
@@ -54,21 +55,38 @@ $is_admin = $is_admin ?? false;
                     <?php endif; ?>
 
                     <div class="mb-3">
-                        <label for="assigned_to" class="form-label">Assign To</label>
-                        <select class="form-select" id="assigned_to" name="assigned_to">
-                            <option value="">Unassigned</option>
+                        <label class="form-label">Assign To (Multiple Developers)</label>
+                        <div id="selectedDevelopers" class="mb-2 p-2 bg-light rounded" style="min-height: 40px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+                            <span class="text-muted" id="noDevelopersText">No developers selected</span>
+                        </div>
+                        
+                        <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
                             <?php foreach ($users as $user): ?>
                             <?php 
                                 $skillsList = $user_skills[$user['id']] ?? [];
                                 $skillsLabel = empty($skillsList) ? '' : ' • ' . implode(', ', $skillsList);
                                 $skillKey = implode('|', array_map('strtolower', $skillsList));
                             ?>
-                            <option value="<?= $user['id'] ?>" data-skills="<?= esc($skillKey, 'attr') ?>">
-                                <?= esc($user['username'] . $skillsLabel) ?>
-                            </option>
+                            <div class="form-check mb-2">
+                                <input 
+                                    class="form-check-input developer-checkbox" 
+                                    type="checkbox" 
+                                    id="developer_<?= $user['id'] ?>" 
+                                    name="assigned_to[]" 
+                                    value="<?= $user['id'] ?>"
+                                    data-username="<?= esc($user['username']) ?>"
+                                    data-skills="<?= esc($skillKey, 'attr') ?>"
+                                >
+                                <label class="form-check-label" for="developer_<?= $user['id'] ?>">
+                                    <strong><?= esc($user['username']) ?></strong>
+                                    <?php if (!empty($skillsLabel)): ?>
+                                        <span class="text-muted small"><?= esc($skillsLabel) ?></span>
+                                    <?php endif; ?>
+                                </label>
+                            </div>
                             <?php endforeach; ?>
-                        </select>
-                        <small class="form-text text-muted">Usernames show relevant skills to help pick the right teammate.</small>
+                        </div>
+                        <small class="form-text text-muted d-block mt-2">Select one or more team members. Usernames show relevant skills to help pick the right teammates.</small>
                     </div>
 
                     <div class="row">
@@ -129,24 +147,33 @@ $is_admin = $is_admin ?? false;
 <script>
 const projectSelect = document.getElementById('project_id');
 const prioritySelect = document.getElementById('priority');
+const deadlineSelect = document.getElementById('deadline');
 const assignmentSelect = document.getElementById('assigned_to');
 const skillFilterSelect = document.getElementById('skill_filter');
 
-function setPriorityFromProject() {
+function setProjectDefaults() {
     if (!projectSelect) return;
     const selected = projectSelect.options[projectSelect.selectedIndex];
     if (!selected) return;
+    
+    // Set priority from project
     const projectPriority = selected.getAttribute('data-priority');
-    if (projectPriority) {
+    if (projectPriority && prioritySelect) {
         prioritySelect.value = projectPriority;
+    }
+    
+    // Set deadline from project
+    const projectDeadline = selected.getAttribute('data-deadline');
+    if (projectDeadline && deadlineSelect) {
+        deadlineSelect.value = projectDeadline;
     }
 }
 
-// Apply default priority on load if a project is pre-selected
-setPriorityFromProject();
+// Apply default values on load if a project is pre-selected
+setProjectDefaults();
 
 projectSelect.addEventListener('change', () => {
-    setPriorityFromProject();
+    setProjectDefaults();
 });
 
 function filterUsersBySkill() {
@@ -170,6 +197,46 @@ function filterUsersBySkill() {
     });
 }
 
+// Handle developer checkbox selection and display
+function updateSelectedDevelopers() {
+    const checkboxes = document.querySelectorAll('.developer-checkbox:checked');
+    const selectedDevelopersDiv = document.getElementById('selectedDevelopers');
+    const noDevelopersText = document.getElementById('noDevelopersText');
+    
+    if (checkboxes.length === 0) {
+        selectedDevelopersDiv.innerHTML = '<span class="text-muted" id="noDevelopersText">No developers selected</span>';
+    } else {
+        let html = '';
+        checkboxes.forEach(checkbox => {
+            const username = checkbox.dataset.username;
+            const userId = checkbox.value;
+            html += `<span class="badge bg-primary d-flex align-items-center gap-2">
+                ${username}
+                <button type="button" class="btn-close btn-close-white" data-user-id="${userId}" style="font-size: 0.7rem;"></button>
+            </span>`;
+        });
+        selectedDevelopersDiv.innerHTML = html;
+        
+        // Add click handlers to remove badges
+        selectedDevelopersDiv.querySelectorAll('.btn-close').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const userId = btn.dataset.userId;
+                document.getElementById(`developer_${userId}`).checked = false;
+                updateSelectedDevelopers();
+            });
+        });
+    }
+}
+
+// Add event listeners to all checkboxes
+document.querySelectorAll('.developer-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateSelectedDevelopers);
+});
+
+// Initialize selected developers display
+updateSelectedDevelopers();
+
 if (skillFilterSelect) {
     skillFilterSelect.addEventListener('change', filterUsersBySkill);
     filterUsersBySkill();
@@ -181,8 +248,13 @@ document.getElementById('taskForm').addEventListener('submit', async (e) => {
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
     
+    // Handle multiple assignees from checkboxes
+    const checkedBoxes = document.querySelectorAll('.developer-checkbox:checked');
+    const assignedUserIds = Array.from(checkedBoxes).map(checkbox => checkbox.value);
+    data.assigned_to = assignedUserIds.length > 0 ? assignedUserIds : [];
+    
     // Convert empty strings to null for optional fields
-    ['description', 'assigned_to', 'start_date', 'deadline', 'estimated_hours'].forEach(field => {
+    ['description', 'start_date', 'deadline', 'estimated_hours'].forEach(field => {
         if (data[field] === '') data[field] = null;
     });
     

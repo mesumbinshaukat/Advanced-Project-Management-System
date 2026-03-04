@@ -54,7 +54,25 @@ class ProjectsController extends BaseController
 
         if (!$isAdmin) {
             $projectUserModel = new ProjectUserModel();
-            if (!$projectUserModel->isUserAssignedToProject($id, $user->id)) {
+            $isProjectMember = $projectUserModel->isUserAssignedToProject($id, $user->id);
+            
+            // Check if user is assigned to any tasks in this project (legacy assigned_to field)
+            $db = \Config\Database::connect();
+            $legacyTaskAssignment = $db->table('tasks')
+                ->where('project_id', $id)
+                ->where('assigned_to', $user->id)
+                ->where('deleted_at', null)
+                ->countAllResults();
+            
+            // Check if user is assigned to any tasks in this project (new task_assignments table)
+            $newTaskAssignment = $db->table('task_assignments')
+                ->join('tasks', 'tasks.id = task_assignments.task_id')
+                ->where('tasks.project_id', $id)
+                ->where('task_assignments.user_id', $user->id)
+                ->where('tasks.deleted_at', null)
+                ->countAllResults();
+            
+            if (!$isProjectMember && $legacyTaskAssignment === 0 && $newTaskAssignment === 0) {
                 return redirect()->to('/projects')->with('error', 'You do not have access to this project');
             }
         }

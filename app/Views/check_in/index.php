@@ -28,34 +28,6 @@
                     Checked in at <?= date('g:i A', strtotime($today_check_in['checked_in_at'])) ?>
                 </span>
                 <?php endif; ?>
-
-<?= $this->section('scripts') ?>
-<script>
-    (function () {
-        const pad = (value) => String(value).padStart(2, '0');
-        const formatLocalDateTime = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-
-        const checkInForm = document.getElementById('checkInForm');
-        if (checkInForm) {
-            checkInForm.addEventListener('submit', () => {
-                const hidden = document.getElementById('client_checked_in_at');
-                if (hidden) {
-                    hidden.value = formatLocalDateTime(new Date());
-                }
-            });
-        }
-
-        document.querySelectorAll('.checkout-form').forEach((form) => {
-            form.addEventListener('submit', () => {
-                const hidden = form.querySelector('input[name="client_checked_out_at"]');
-                if (hidden) {
-                    hidden.value = formatLocalDateTime(new Date());
-                }
-            });
-        });
-    })();
-</script>
-<?= $this->endSection() ?>
             </div>
             <div class="card-body">
                 <?php if (!empty($has_checked_out)): ?>
@@ -189,10 +161,21 @@
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <strong><?= date('M d, Y', strtotime($checkIn['check_in_date'])) ?></strong>
                         <?php
-                        $moodColors = ['great' => 'success', 'good' => 'info', 'okay' => 'secondary', 'struggling' => 'warning', 'blocked' => 'danger'];
+                        $moodColors = [
+                            'great' => 'success',
+                            'good' => 'info',
+                            'okay' => 'secondary',
+                            'struggling' => 'warning',
+                            'blocked' => 'danger',
+                            'happy' => 'success',
+                            'sad' => 'danger',
+                            'neutral' => 'secondary'
+                        ];
+                        $mood = $checkIn['mood'] ?? 'okay';
+                        $moodColor = $moodColors[$mood] ?? 'secondary';
                         ?>
-                        <span class="badge bg-<?= $moodColors[$checkIn['mood']] ?>">
-                            <?= ucfirst($checkIn['mood']) ?>
+                        <span class="badge bg-<?= $moodColor ?>">
+                            <?= ucfirst($mood) ?>
                         </span>
                     </div>
                     <?php if ($checkIn['today_plan']): ?>
@@ -222,4 +205,32 @@
     </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+    (function () {
+        const pad = (value) => String(value).padStart(2, '0');
+        const formatLocalDateTime = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+
+        const checkInForm = document.getElementById('checkInForm');
+        if (checkInForm) {
+            checkInForm.addEventListener('submit', () => {
+                const hidden = document.getElementById('client_checked_in_at');
+                if (hidden) {
+                    hidden.value = formatLocalDateTime(new Date());
+                }
+            });
+        }
+
+        document.querySelectorAll('.checkout-form').forEach((form) => {
+            form.addEventListener('submit', () => {
+                const hidden = form.querySelector('input[name="client_checked_out_at"]');
+                if (hidden) {
+                    hidden.value = formatLocalDateTime(new Date());
+                }
+            });
+        });
+    })();
+</script>
 <?= $this->endSection() ?>

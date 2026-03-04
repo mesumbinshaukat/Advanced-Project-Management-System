@@ -7,6 +7,7 @@ use App\Models\TaskModel;
 use App\Models\ProjectModel;
 use App\Models\ProjectUserModel;
 use App\Models\UserSkillModel;
+use App\Models\TaskAssignmentModel;
 
 class TasksController extends BaseController
 {
@@ -51,7 +52,7 @@ class TasksController extends BaseController
         }
 
         $taskModel = new TaskModel();
-        $statuses = ['backlog', 'todo', 'in_progress', 'review', 'done'];
+        $statuses = ['backlog', 'todo', 'in_progress', 'submitted_for_review', 'needs_revision', 'review', 'done'];
         $tasksByStatus = [];
         
         foreach ($statuses as $status) {
@@ -118,7 +119,10 @@ class TasksController extends BaseController
         // Check if user has access to this task
         if (!$isAdmin) {
             $projectUserModel = new ProjectUserModel();
-            if (!$projectUserModel->isUserAssignedToProject($task['project_id'], $user->id)) {
+            $taskAssignmentModel = new TaskAssignmentModel();
+            $assignedUserIds = $taskAssignmentModel->getAssignedUserIds($id);
+            
+            if (!$projectUserModel->isUserAssignedToProject($task['project_id'], $user->id) && !in_array($user->id, $assignedUserIds)) {
                 return redirect()->to('/tasks')->with('error', 'You do not have access to this task');
             }
         }
@@ -126,14 +130,59 @@ class TasksController extends BaseController
         $projectModel = new ProjectModel();
         $project = $projectModel->find($task['project_id']);
         
+        // Get assigned developers
+        $taskAssignmentModel = new TaskAssignmentModel();
+        $assignedDevelopers = $taskAssignmentModel->getAssignedUsers($id);
+        
         $data = [
             'title' => $task['title'],
             'task' => $task,
             'project' => $project,
+            'assigned_developers' => $assignedDevelopers,
             'isAdmin' => $isAdmin,
         ];
 
         return view('tasks/view', $data);
+    }
+
+    public function reviewRequests()
+    {
+        $user = auth()->user();
+        $isAdmin = $user->inGroup('admin');
+        
+        // Only admins can access this page
+        if (!$isAdmin) {
+            return redirect()->to('/tasks')->with('error', 'Access denied');
+        }
+        
+        $taskModel = new TaskModel();
+        $projectModel = new ProjectModel();
+        
+        // Get all tasks that are submitted for review or need revision
+        $reviewTasks = $taskModel->select('tasks.*, projects.name as project_name, users.username as assigned_username')
+            ->join('projects', 'projects.id = tasks.project_id', 'left')
+            ->join('users', 'users.id = tasks.assigned_to', 'left')
+            ->whereIn('tasks.status', ['submitted_for_review', 'needs_revision'])
+            ->where('tasks.deleted_at', null)
+            ->orderBy('tasks.submitted_for_review_at', 'DESC')
+            ->findAll();
+        
+        // Get task assignments for tasks without assigned_to
+        $taskAssignmentModel = new TaskAssignmentModel();
+        foreach ($reviewTasks as &$task) {
+            if (!$task['assigned_to']) {
+                $assignedUsers = $taskAssignmentModel->getAssignedUsers($task['id']);
+                $task['assigned_developers'] = $assignedUsers;
+            }
+        }
+        
+        $data = [
+            'title' => 'Task Review Requests',
+            'reviewTasks' => $reviewTasks,
+            'isAdmin' => $isAdmin,
+        ];
+
+        return view('tasks/review_requests', $data);
     }
 
     public function edit($id)
@@ -149,7 +198,10 @@ class TasksController extends BaseController
         }
 
         // Check if user has access to this task
-        if (!$isAdmin && $task['assigned_to'] != $user->id) {
+        $assignmentModel = new TaskAssignmentModel();
+        $assignedUserIds = $assignmentModel->getAssignedUserIds($id);
+        
+        if (!$isAdmin && !in_array($user->id, $assignedUserIds)) {
             return redirect()->to('/tasks')->with('error', 'You do not have access to this task');
         }
 
@@ -169,6 +221,7 @@ class TasksController extends BaseController
             'task' => $task,
             'projects' => $projects,
             'users' => $users,
+            'assigned_user_ids' => $assignedUserIds,
         ];
         
         return view('tasks/edit', $data);

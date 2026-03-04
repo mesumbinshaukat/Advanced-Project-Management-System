@@ -43,7 +43,7 @@ class TaskModel extends Model
     protected $validationRules = [
         'project_id' => 'required|is_natural_no_zero',
         'title' => 'required|min_length[3]|max_length[255]',
-        'status' => 'permit_empty|in_list[backlog,todo,in_progress,review,done]',
+        'status' => 'permit_empty|in_list[backlog,todo,in_progress,review,done,submitted_for_review,needs_revision]',
         'priority' => 'permit_empty|in_list[low,medium,high,urgent]',
     ];
     protected $validationMessages = [];

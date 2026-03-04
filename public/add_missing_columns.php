@@ -165,6 +165,7 @@ $db_port = $env['database.default.port'] ?? 3306;
             ['table' => 'tasks', 'column' => 'order_position', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `order_position` INT(11) NOT NULL DEFAULT 0 AFTER `completed_at`"],
             
             // Projects table - CRITICAL COLUMNS
+            ['table' => 'projects', 'column' => 'budget', 'sql' => "ALTER TABLE `projects` ADD COLUMN `budget` DECIMAL(12,2) NOT NULL DEFAULT 0 AFTER `status`"],
             ['table' => 'projects', 'column' => 'documentation', 'sql' => "ALTER TABLE `projects` ADD COLUMN `documentation` TEXT NULL AFTER `description`"],
             ['table' => 'projects', 'column' => 'repository_url', 'sql' => "ALTER TABLE `projects` ADD COLUMN `repository_url` VARCHAR(255) NULL AFTER `documentation`"],
             ['table' => 'projects', 'column' => 'staging_url', 'sql' => "ALTER TABLE `projects` ADD COLUMN `staging_url` VARCHAR(255) NULL AFTER `repository_url`"],
@@ -191,6 +192,11 @@ $db_port = $env['database.default.port'] ?? 3306;
             
             // Alerts
             ['table' => 'alerts', 'column' => 'user_id', 'sql' => "ALTER TABLE `alerts` ADD COLUMN `user_id` INT(11) UNSIGNED NULL AFTER `id`"],
+            ['table' => 'alerts', 'column' => 'action_url', 'sql' => "ALTER TABLE `alerts` ADD COLUMN `action_url` VARCHAR(500) NULL AFTER `message`"],
+            ['table' => 'alerts', 'column' => 'is_resolved', 'sql' => "ALTER TABLE `alerts` ADD COLUMN `is_resolved` TINYINT(1) NOT NULL DEFAULT 0 AFTER `action_url`"],
+            ['table' => 'alerts', 'column' => 'resolved_at', 'sql' => "ALTER TABLE `alerts` ADD COLUMN `resolved_at` DATETIME NULL AFTER `is_resolved`"],
+            ['table' => 'alerts', 'column' => 'created_at', 'sql' => "ALTER TABLE `alerts` ADD COLUMN `created_at` DATETIME NULL AFTER `resolved_at`"],
+            ['table' => 'alerts', 'column' => 'updated_at', 'sql' => "ALTER TABLE `alerts` ADD COLUMN `updated_at` DATETIME NULL AFTER `created_at`"],
             
             // Messages table - CRITICAL COLUMN
             ['table' => 'messages', 'column' => 'message', 'sql' => "ALTER TABLE `messages` ADD COLUMN `message` TEXT NULL AFTER `parent_id`"],
@@ -625,6 +631,85 @@ $db_port = $env['database.default.port'] ?? 3306;
 
         echo '</div>';
 
+        // Apply Task Review Workflow Migration
+        echo '<div class="step">';
+        echo '<h3>Step 7: Applying Task Review Workflow Migration</h3>';
+        
+        $tasksTableCheck = $mysqli->query("SHOW TABLES LIKE 'tasks'");
+        if (!$tasksTableCheck || $tasksTableCheck->num_rows === 0) {
+            echo '<div class="warning">Tasks table missing, skipping review workflow updates.</div>';
+        } else {
+            // Check current status column definition
+            $statusCheck = $mysqli->query("SHOW COLUMNS FROM `tasks` WHERE Field = 'status'");
+            if ($statusCheck && $statusCheck->num_rows > 0) {
+                $statusInfo = $statusCheck->fetch_assoc();
+                $currentType = $statusInfo['Type'];
+                
+                // Check if new statuses are already included
+                if (strpos($currentType, 'submitted_for_review') === false || strpos($currentType, 'needs_revision') === false) {
+                    echo '<div class="info">Updating task status column to include review workflow statuses...</div>';
+                    $updateStatusSql = "ALTER TABLE `tasks` MODIFY `status` ENUM('backlog','todo','in_progress','submitted_for_review','needs_revision','review','done') DEFAULT 'backlog'";
+                    
+                    if ($mysqli->query($updateStatusSql)) {
+                        echo '<div class="success">Updated task status column with review workflow statuses</div>';
+                        $added++;
+                    } else {
+                        echo '<div class="error">Failed to update task status column: ' . htmlspecialchars($mysqli->error) . '</div>';
+                    }
+                } else {
+                    echo '<div class="info">Task status column already includes review workflow statuses</div>';
+                    $skipped++;
+                }
+            }
+            
+            // Add review-related columns
+            $reviewColumns = [
+                ['column' => 'review_comments', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `review_comments` TEXT NULL AFTER `completed_at`"],
+                ['column' => 'reviewed_by', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `reviewed_by` INT(11) UNSIGNED NULL AFTER `review_comments`"],
+                ['column' => 'reviewed_at', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `reviewed_at` DATETIME NULL AFTER `reviewed_by`"],
+                ['column' => 'submitted_for_review_at', 'sql' => "ALTER TABLE `tasks` ADD COLUMN `submitted_for_review_at` DATETIME NULL AFTER `reviewed_at`"],
+            ];
+            
+            foreach ($reviewColumns as $col) {
+                $colName = $col['column'];
+                $colCheck = $mysqli->query("SHOW COLUMNS FROM `tasks` LIKE '{$colName}'");
+                
+                if ($colCheck && $colCheck->num_rows > 0) {
+                    echo '<div class="info">Column already exists: tasks.' . htmlspecialchars($colName) . '</div>';
+                    $skipped++;
+                } else {
+                    if ($mysqli->query($col['sql'])) {
+                        echo '<div class="success">Added column: tasks.' . htmlspecialchars($colName) . '</div>';
+                        $added++;
+                    } else {
+                        echo '<div class="error">Failed to add column tasks.' . htmlspecialchars($colName) . ': ' . htmlspecialchars($mysqli->error) . '</div>';
+                    }
+                }
+            }
+            
+            // Add foreign key for reviewed_by if it doesn't exist
+            $fkQuery = sprintf(
+                "SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = '%s' AND TABLE_NAME = 'tasks' AND COLUMN_NAME = 'reviewed_by' AND REFERENCED_TABLE_NAME IS NOT NULL",
+                $mysqli->real_escape_string($db_name)
+            );
+            $fkResult = $mysqli->query($fkQuery);
+            
+            if (!$fkResult || $fkResult->num_rows === 0) {
+                $addFkSql = "ALTER TABLE `tasks` ADD CONSTRAINT `tasks_reviewed_by_foreign` FOREIGN KEY (`reviewed_by`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE";
+                if ($mysqli->query($addFkSql)) {
+                    echo '<div class="success">Added foreign key for reviewed_by column</div>';
+                    $added++;
+                } else {
+                    echo '<div class="error">Failed to add reviewed_by foreign key: ' . htmlspecialchars($mysqli->error) . '</div>';
+                }
+            } else {
+                echo '<div class="info">Foreign key for reviewed_by already exists</div>';
+                $skipped++;
+            }
+        }
+        
+        echo '</div>';
+
         // Check and fix admin user authentication
         echo '<div class="section">';
         echo '<h2>Admin User Authentication Check</h2>';
@@ -802,6 +887,82 @@ $db_port = $env['database.default.port'] ?? 3306;
             } else {
                 echo '<div class="error">No admin user found in database!</div>';
             }
+        }
+        
+        echo '</div>';
+
+        // Create task_assignments table for multi-user task assignments
+        echo '<div class="step">';
+        echo '<h3>Step 7: Creating task_assignments table for multi-user task assignments</h3>';
+        
+        $tableCheck = $mysqli->query("SHOW TABLES LIKE 'task_assignments'");
+        if (!$tableCheck || $tableCheck->num_rows === 0) {
+            echo '<div class="info">Creating task_assignments table...</div>';
+            $createTaskAssignments = "CREATE TABLE IF NOT EXISTS `task_assignments` (
+                `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `task_id` INT(11) UNSIGNED NOT NULL,
+                `user_id` INT(11) UNSIGNED NOT NULL,
+                `created_at` DATETIME NULL,
+                `updated_at` DATETIME NULL,
+                PRIMARY KEY (`id`),
+                KEY `task_id` (`task_id`),
+                KEY `user_id` (`user_id`),
+                UNIQUE KEY `unique_task_user` (`task_id`, `user_id`),
+                CONSTRAINT `task_assignments_ibfk_1` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+                CONSTRAINT `task_assignments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+            
+            if ($mysqli->query($createTaskAssignments)) {
+                echo '<div class="success">Created task_assignments table for multi-user task assignments</div>';
+                $added++;
+            } else {
+                echo '<div class="error">Error creating task_assignments table: ' . htmlspecialchars($mysqli->error) . '</div>';
+            }
+        } else {
+            echo '<div class="info">task_assignments table already exists</div>';
+            $skipped++;
+        }
+        
+        echo '</div>';
+
+        // Create project_credentials table for storing sensitive project information
+        echo '<div class="step">';
+        echo '<h3>Step 8: Creating project_credentials table for sensitive information storage</h3>';
+        
+        $tableCheck = $mysqli->query("SHOW TABLES LIKE 'project_credentials'");
+        if (!$tableCheck || $tableCheck->num_rows === 0) {
+            echo '<div class="info">Creating project_credentials table...</div>';
+            $createProjectCredentials = "CREATE TABLE IF NOT EXISTS `project_credentials` (
+                `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `project_id` INT(11) UNSIGNED NOT NULL,
+                `credential_type` VARCHAR(100) NOT NULL,
+                `label` VARCHAR(255) NOT NULL,
+                `username` VARCHAR(255) NULL,
+                `password` LONGTEXT NULL,
+                `email` VARCHAR(255) NULL,
+                `api_key` LONGTEXT NULL,
+                `api_secret` LONGTEXT NULL,
+                `url` VARCHAR(500) NULL,
+                `notes` TEXT NULL,
+                `created_by` INT(11) UNSIGNED NOT NULL,
+                `created_at` DATETIME NULL,
+                `updated_at` DATETIME NULL,
+                PRIMARY KEY (`id`),
+                KEY `project_id` (`project_id`),
+                KEY `credential_type` (`credential_type`),
+                CONSTRAINT `project_credentials_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+                CONSTRAINT `project_credentials_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+            
+            if ($mysqli->query($createProjectCredentials)) {
+                echo '<div class="success">Created project_credentials table for storing sensitive project information</div>';
+                $added++;
+            } else {
+                echo '<div class="error">Error creating project_credentials table: ' . htmlspecialchars($mysqli->error) . '</div>';
+            }
+        } else {
+            echo '<div class="info">project_credentials table already exists</div>';
+            $skipped++;
         }
         
         echo '</div>';

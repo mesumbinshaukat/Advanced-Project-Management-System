@@ -79,6 +79,38 @@
             margin-right: 0.75rem;
             font-size: 1.1rem;
         }
+
+        .sidebar-nav-link[data-bs-toggle="collapse"] {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-nav-link[data-bs-toggle="collapse"] i:last-child {
+            margin-right: 0;
+            margin-left: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-nav-link[data-bs-toggle="collapse"][aria-expanded="true"] i:last-child {
+            transform: rotate(-180deg);
+        }
+
+        .sidebar-nav-item .collapse .sidebar-nav-link {
+            color: #a1aec7;
+            padding-left: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-nav-item .collapse .sidebar-nav-link:hover {
+            background: rgba(255,255,255,0.08);
+            color: #cbd5e1;
+        }
+
+        .sidebar-nav-item .collapse .sidebar-nav-link.active {
+            background: rgba(37, 99, 235, 0.2);
+            color: #fff;
+        }
         
         .main-content {
             margin-left: var(--sidebar-width);
@@ -306,9 +338,30 @@
                 </a>
             </li>
             <li class="sidebar-nav-item">
+                <?php if (auth()->user()->inGroup('admin')): ?>
+                <a href="#tasksMenu" class="sidebar-nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="tasksMenu">
+                    <i class="bi bi-check2-square"></i> Tasks
+                    <i class="bi bi-chevron-down ms-auto" style="font-size: 0.85rem;"></i>
+                </a>
+                <div class="collapse" id="tasksMenu">
+                    <ul class="list-unstyled ps-3 mt-2">
+                        <li class="sidebar-nav-item">
+                            <a href="<?= base_url('tasks') ?>" class="sidebar-nav-link <?= url_is('tasks') && !url_is('tasks/review-requests') ? 'active' : '' ?>" style="padding-left: 2rem; font-size: 0.95rem;">
+                                <i class="bi bi-list-task"></i> All Tasks
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a href="<?= base_url('tasks/review-requests') ?>" class="sidebar-nav-link <?= url_is('tasks/review-requests') ? 'active' : '' ?>" style="padding-left: 2rem; font-size: 0.95rem;">
+                                <i class="bi bi-clipboard-check"></i> Review Requests
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <?php else: ?>
                 <a href="<?= base_url('tasks') ?>" class="sidebar-nav-link <?= url_is('tasks*') ? 'active' : '' ?>">
                     <i class="bi bi-check2-square"></i> Tasks
                 </a>
+                <?php endif; ?>
             </li>
             <li class="sidebar-nav-item">
                 <a href="<?= base_url('time/tracker') ?>" class="sidebar-nav-link <?= url_is('time*') ? 'active' : '' ?>">
@@ -344,9 +397,24 @@
                 </a>
             </li>
             <li class="sidebar-nav-item">
-                <a href="<?= base_url('attendance') ?>" class="sidebar-nav-link <?= url_is('attendance*') ? 'active' : '' ?>">
+                <a href="#attendanceMenu" class="sidebar-nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="attendanceMenu">
                     <i class="bi bi-calendar4-week"></i> Attendance
+                    <i class="bi bi-chevron-down ms-auto" style="font-size: 0.85rem;"></i>
                 </a>
+                <div class="collapse" id="attendanceMenu">
+                    <ul class="list-unstyled ps-3 mt-2">
+                        <li class="sidebar-nav-item">
+                            <a href="<?= base_url('attendance') ?>" class="sidebar-nav-link <?= url_is('attendance') && !url_is('check-in/team') ? 'active' : '' ?>" style="padding-left: 2rem; font-size: 0.95rem;">
+                                <i class="bi bi-graph-up"></i> Attendance
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a href="<?= base_url('check-in/team') ?>" class="sidebar-nav-link <?= url_is('check-in/team') ? 'active' : '' ?>" style="padding-left: 2rem; font-size: 0.95rem;">
+                                <i class="bi bi-people"></i> Team Check-In
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
             <li class="sidebar-nav-item">
                 <a href="<?= base_url('developers') ?>" class="sidebar-nav-link <?= url_is('developers*') ? 'active' : '' ?>">

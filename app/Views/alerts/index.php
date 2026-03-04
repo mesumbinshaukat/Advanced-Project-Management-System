@@ -2,6 +2,64 @@
 
 <?= $this->section('content') ?>
 
+<script>
+console.log('=== ALERTS DEBUG SCRIPT ===');
+console.log('Current user is admin:', <?= auth()->user()->inGroup('admin') ? 'true' : 'false' ?>);
+console.log('Current user ID:', <?= auth()->id() ?>);
+console.log('Current user username:', '<?= auth()->user()->username ?>');
+console.log('Alerts count received:', <?= count($alerts) ?>);
+console.log('Alerts data:', <?= json_encode($alerts) ?>);
+
+// Detailed alert inspection
+const alertsData = <?= json_encode($alerts) ?>;
+console.log('Detailed alert inspection:');
+if (alertsData && alertsData.length > 0) {
+    alertsData.forEach((alert, index) => {
+        console.log(`Alert ${index + 1}:`, {
+            id: alert.id,
+            type: alert.type,
+            severity: alert.severity,
+            title: alert.title,
+            message: alert.message,
+            entity_type: alert.entity_type,
+            entity_id: alert.entity_id,
+            is_resolved: alert.is_resolved
+        });
+    });
+} else {
+    console.log('No alerts in array or alerts is null/undefined');
+}
+
+// Check database queries for developer alerts
+console.log('Checking developer alert access...');
+console.log('User should see alerts for:');
+console.log('1. Alerts directly assigned to user_id:', <?= auth()->id() ?>);
+console.log('2. Alerts for projects where user is assigned');
+console.log('3. Alerts for tasks where user is assigned');
+
+// Test if there are any alerts in the system at all
+fetch('<?= base_url('alerts/generate') ?>', {
+    method: 'GET',
+    headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+    },
+    credentials: 'same-origin'
+})
+.then(response => {
+    console.log('Generate alerts response status:', response.status);
+    if (response.status === 403) {
+        console.log('User cannot generate alerts (expected for developers)');
+    } else {
+        console.log('User can generate alerts or other response');
+    }
+})
+.catch(error => {
+    console.log('Generate alerts test error (expected):', error.message);
+});
+
+console.log('=== END ALERTS DEBUG SCRIPT ===');
+</script>
+
 <div class="row mb-4">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center">
@@ -18,6 +76,16 @@
     </div>
 </div>
 
+<?php 
+// Debug output to understand the issue
+echo "<!-- DEBUG: alerts variable type: " . gettype($alerts) . " -->";
+echo "<!-- DEBUG: alerts count: " . count($alerts) . " -->";
+echo "<!-- DEBUG: alerts empty check: " . (empty($alerts) ? 'true' : 'false') . " -->";
+echo "<!-- DEBUG: alerts is_array: " . (is_array($alerts) ? 'true' : 'false') . " -->";
+if (is_array($alerts) && !empty($alerts)) {
+    echo "<!-- DEBUG: First alert keys: " . implode(', ', array_keys($alerts[0])) . " -->";
+}
+?>
 <?php if (empty($alerts)): ?>
 <div class="row">
     <div class="col-12">
@@ -36,14 +104,28 @@
         <?php
         $groupedAlerts = [];
         foreach ($alerts as $alert) {
-            $groupedAlerts[$alert['severity']][] = $alert;
+            // Handle empty or null severity by defaulting to 'info'
+            $severity = !empty($alert['severity']) ? $alert['severity'] : 'info';
+            $groupedAlerts[$severity][] = $alert;
         }
         ?>
         
-        <?php foreach (['critical', 'high', 'medium', 'low'] as $severity): ?>
+        <?php foreach (['critical', 'high', 'medium', 'low', 'info'] as $severity): ?>
             <?php if (isset($groupedAlerts[$severity])): ?>
             <div class="card mb-3">
-                <div class="card-header bg-<?= $severity === 'critical' ? 'danger' : ($severity === 'high' ? 'warning' : ($severity === 'medium' ? 'info' : 'secondary')) ?> text-white">
+                <?php
+                $headerClass = 'secondary';
+                if ($severity === 'critical') {
+                    $headerClass = 'danger';
+                } elseif ($severity === 'high') {
+                    $headerClass = 'warning';
+                } elseif ($severity === 'medium') {
+                    $headerClass = 'info';
+                } elseif ($severity === 'info') {
+                    $headerClass = 'primary';
+                }
+                ?>
+                <div class="card-header bg-<?= $headerClass ?> text-white">
                     <i class="bi bi-exclamation-triangle-fill"></i> <?= ucfirst($severity) ?> Alerts (<?= count($groupedAlerts[$severity]) ?>)
                 </div>
                 <div class="card-body p-0">

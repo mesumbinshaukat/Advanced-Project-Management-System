@@ -280,6 +280,119 @@ async function reviewTask(taskId, status) {
         });
         
         const data = await response.json();
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const columns = document.querySelectorAll('.kanban-cards');
+    
+    columns.forEach(column => {
+        new Sortable(column, {
+            group: 'kanban',
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: async function(evt) {
+                const taskId = evt.item.dataset.taskId;
+                const newStatus = evt.to.dataset.status;
+                const newPosition = evt.newIndex;
+                
+                const badge = evt.to.parentElement.querySelector('.badge');
+                const currentCount = parseInt(badge.textContent);
+                badge.textContent = currentCount + 1;
+                
+                const oldBadge = evt.from.parentElement.querySelector('.badge');
+                const oldCount = parseInt(oldBadge.textContent);
+                oldBadge.textContent = Math.max(0, oldCount - 1);
+                
+                try {
+                    const response = await fetch(`<?= base_url('api/tasks/') ?>${taskId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            status: newStatus,
+                            order_position: newPosition
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        if (response.status === 403) {
+                            alert('Permission denied: You cannot update this task');
+                        } else {
+                            alert(data.message || 'Failed to update task status');
+                        }
+                        location.reload();
+                    } else {
+                        console.log('Task status updated successfully');
+                    }
+                } catch (error) {
+                    console.error('Error updating task status:', error);
+                    alert('Error updating task status');
+                    location.reload();
+                }
+            }
+        });
+    });
+});
+
+// Submit task for review function
+async function submitTaskForReview(taskId) {
+    if (!confirm('Are you sure you want to submit this task for review?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`<?= base_url('api/tasks/') ?>${taskId}/submit-review`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('Task submitted for review successfully!');
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to submit task for review');
+        }
+    } catch (error) {
+        console.error('Error submitting task for review:', error);
+        alert('Error submitting task for review');
+    }
+}
+
+// Review task function for admins
+async function reviewTask(taskId, status) {
+    const statusText = status === 'done' ? 'approve' : 'request revision for';
+    const comments = status === 'needs_revision' ? prompt('Please provide revision comments (optional):') : '';
+    
+    if (!confirm(`Are you sure you want to ${statusText} this task?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`<?= base_url('api/tasks/') ?>${taskId}/review`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                status: status,
+                comments: comments || ''
+            })
+        });
+        
+        const data = await response.json();
         
         if (response.ok) {
             const action = status === 'done' ? 'approved' : 'marked for revision';
@@ -293,5 +406,4 @@ async function reviewTask(taskId, status) {
         alert('Error reviewing task');
     }
 }
-</script>
 <?= $this->endSection() ?>
