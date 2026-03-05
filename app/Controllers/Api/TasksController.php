@@ -269,19 +269,70 @@ class TasksController extends ResourceController
             return $this->fail('Task must be in todo or in progress status to submit for review');
         }
         
-        // Update status to submitted_for_review
-        if ($model->updateTaskStatus($id, 'submitted_for_review')) {
+        // Get and validate checklist data from request
+        $checklistData = $this->request->getJSON(true);
+        
+        if (!$checklistData) {
+            return $this->fail('Checklist data is required for task submission');
+        }
+        
+        // Validate checklist model
+        $checklistModel = new \App\Models\TaskSubmissionChecklistModel();
+        
+        // Prepare checklist data
+        $checklistData['task_id'] = $id;
+        $checklistData['user_id'] = $user->id;
+        $checklistData['submitted_at'] = date('Y-m-d H:i:s');
+        
+        // Validate all required checks are completed
+        if (!$checklistModel->validateChecklist($checklistData)) {
+            return $this->fail('All checklist items must be completed before submitting for review');
+        }
+        
+        // Validate checklist data
+        if (!$checklistModel->validate($checklistData)) {
+            return $this->fail('Invalid checklist data: ' . implode(', ', $checklistModel->errors()));
+        }
+        
+        // Start transaction
+        $db = \Config\Database::connect();
+        $db->transStart();
+        
+        try {
+            // Save checklist
+            if (!$checklistModel->createTaskChecklist($checklistData)) {
+                throw new \Exception('Failed to save submission checklist');
+            }
+            
+            // Update task status to submitted_for_review
+            $updateData = [
+                'status' => 'submitted_for_review',
+                'submitted_for_review_at' => date('Y-m-d H:i:s')
+            ];
+            
+            if (!$model->update($id, $updateData)) {
+                throw new \Exception('Failed to update task status');
+            }
+            
             // Create alert for admin
-            $alertService = new AlertService();
+            $alertService = new \App\Services\AlertService();
             $alertService->alertTaskSubmittedForReview($id, $user->username);
+            
+            $db->transComplete();
+            
+            if ($db->transStatus() === false) {
+                throw new \Exception('Transaction failed');
+            }
             
             return $this->respond([
                 'status' => 'success',
-                'message' => 'Task submitted for review successfully'
+                'message' => 'Task submitted for review successfully with quality checklist'
             ]);
+            
+        } catch (\Exception $e) {
+            $db->transRollback();
+            return $this->fail('Failed to submit task for review: ' . $e->getMessage());
         }
-        
-        return $this->fail('Failed to submit task for review');
     }
     
     public function reviewTask($id = null)

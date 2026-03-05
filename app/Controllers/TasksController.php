@@ -8,6 +8,7 @@ use App\Models\ProjectModel;
 use App\Models\ProjectUserModel;
 use App\Models\UserSkillModel;
 use App\Models\TaskAssignmentModel;
+use App\Models\TaskSubmissionChecklistModel;
 
 class TasksController extends BaseController
 {
@@ -167,13 +168,22 @@ class TasksController extends BaseController
             ->orderBy('tasks.submitted_for_review_at', 'DESC')
             ->findAll();
         
-        // Get task assignments for tasks without assigned_to
+        // Get task assignments for tasks without assigned_to and fetch checklists
         $taskAssignmentModel = new TaskAssignmentModel();
+        $checklistModel = new TaskSubmissionChecklistModel();
+        
         foreach ($reviewTasks as &$task) {
             if (!$task['assigned_to']) {
                 $assignedUsers = $taskAssignmentModel->getAssignedUsers($task['id']);
                 $task['assigned_developers'] = $assignedUsers;
             }
+            
+            // Get the checklist for this task
+            $checklist = $checklistModel->where('task_id', $task['id'])
+                ->orderBy('submitted_at', 'DESC')
+                ->first();
+            
+            $task['checklist'] = $checklist;
         }
         
         $data = [

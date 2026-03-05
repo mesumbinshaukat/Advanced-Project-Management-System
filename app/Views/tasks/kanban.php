@@ -169,6 +169,9 @@
 
 <?= $this->endSection() ?>
 
+<!-- Include Task Submission Checklist Modal -->
+<?= $this->include('components/task_submission_checklist_modal') ?>
+
 <?= $this->section('scripts') ?>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
@@ -228,33 +231,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Submit task for review function
-async function submitTaskForReview(taskId) {
-    if (!confirm('Are you sure you want to submit this task for review?')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`<?= base_url('api/tasks/') ?>${taskId}/submit-review`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            alert('Task submitted for review successfully!');
-            location.reload();
-        } else {
-            alert(data.message || 'Failed to submit task for review');
-        }
-    } catch (error) {
-        console.error('Error submitting task for review:', error);
-        alert('Error submitting task for review');
-    }
+// Submit task for review function - now shows checklist modal
+function submitTaskForReview(taskId) {
+    // Show quality checklist modal instead of direct submission
+    showTaskSubmissionChecklist(taskId);
 }
 
 // Review task function for admins

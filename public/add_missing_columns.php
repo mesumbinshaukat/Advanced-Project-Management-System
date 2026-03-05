@@ -710,6 +710,49 @@ $db_port = $env['database.default.port'] ?? 3306;
         
         echo '</div>';
 
+        // Apply Task Submission Checklist Migration
+        echo '<div class="step">';
+        echo '<h3>Step 8: Creating Task Submission Checklist Table</h3>';
+        
+        $checklistTableCheck = $mysqli->query("SHOW TABLES LIKE 'task_submission_checklists'");
+        if ($checklistTableCheck && $checklistTableCheck->num_rows > 0) {
+            echo '<div class="info">Task submission checklists table already exists</div>';
+            $skipped++;
+        } else {
+            echo '<div class="info">Creating task_submission_checklists table...</div>';
+            $createChecklistTableSql = "
+                CREATE TABLE `task_submission_checklists` (
+                    `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                    `task_id` int(11) unsigned NOT NULL,
+                    `user_id` int(11) unsigned NOT NULL,
+                    `is_responsive` tinyint(1) DEFAULT 0,
+                    `no_ai_generated_text` tinyint(1) DEFAULT 0,
+                    `all_links_working` tinyint(1) DEFAULT 0,
+                    `code_reviewed` tinyint(1) DEFAULT 0,
+                    `functionality_tested` tinyint(1) DEFAULT 0,
+                    `cross_browser_tested` tinyint(1) DEFAULT 0,
+                    `additional_notes` text,
+                    `submitted_at` datetime NOT NULL,
+                    `created_at` datetime DEFAULT NULL,
+                    `updated_at` datetime DEFAULT NULL,
+                    PRIMARY KEY (`id`),
+                    KEY `task_id` (`task_id`),
+                    KEY `user_id` (`user_id`),
+                    CONSTRAINT `task_submission_checklists_task_id_foreign` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+                    CONSTRAINT `task_submission_checklists_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ";
+            
+            if ($mysqli->query($createChecklistTableSql)) {
+                echo '<div class="success">Created task_submission_checklists table with foreign keys</div>';
+                $added++;
+            } else {
+                echo '<div class="error">Failed to create task_submission_checklists table: ' . htmlspecialchars($mysqli->error) . '</div>';
+            }
+        }
+        
+        echo '</div>';
+
         // Check and fix admin user authentication
         echo '<div class="section">';
         echo '<h2>Admin User Authentication Check</h2>';
